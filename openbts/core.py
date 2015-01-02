@@ -176,9 +176,9 @@ class Response(object):
     # if the request failed for some reason, raise an error
     if data['code'] in self.error_codes:
       if data['code'] == 404:
-        raise InvalidRequestError('unknown key')
+        raise InvalidRequestError('not found')
       elif data['code'] == 406:
-        raise InvalidRequestError('invalid value')
+        raise InvalidRequestError(data['data'])
       elif data['code'] == 409:
         # TODO(matt): if creating config values isn't possible, will we ever
         #             see the 409 code?

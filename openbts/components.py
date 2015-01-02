@@ -3,6 +3,7 @@ manages components in the OpenBTS application suite
 """
 
 from openbts.core import BaseComponent
+from openbts.exceptions import InvalidRequestError
 
 class OpenBTS(BaseComponent):
   """Manages communication to an OpenBTS instance.
@@ -49,17 +50,33 @@ class SIPAuthServe(BaseComponent):
   def __repr__(self):
     return 'SIPAuthServe component'
 
-  def get_subscribers(self):
-    """Gets all subscribers.
+  def get_subscribers(self, imsi=None, msisdn=None, name=None):
+    """Gets subscribers filtering by IMSI, MSISDN, and/or name
+
+    Args:
+      imsi: the IMSI to search by
+      name: the Name to search by
+      msisdn: the number to search by
 
     Returns:
       Response instance
+
+    Raises:
+      InvalidRequestError if no qualified entry exists
+
     """
+
+    qualifiers = {'imsi': imsi, 'msisdn': msisdn, 'name': name}
+
+    # remove empty qualifiers
+    for key in qualifiers.keys():
+      if not qualifiers[key]:
+        del qualifiers[key]
+
     message = {
       'command': 'subscribers',
       'action': 'read',
-      'key': '',
-      'value': ''
+      'match': qualifiers
     }
     response = self._send_and_receive(message)
     return response
@@ -112,6 +129,163 @@ class SIPAuthServe(BaseComponent):
     response = self._send_and_receive(message)
     return response
 
+  def update_subscriber(self, new_name=None, new_msisdn=None, imsi=None):
+    """Update a subscriber by IMSI.
+
+    Args:
+      imsi: the IMSI of the to-be-updated subscriber
+      new_name: the new name value or None
+      new_msisdn: the new number or None
+
+    Returns:
+      Response instance
+    """
+
+    # verify qualfiers (node manager needs all credentials)
+    resp = self.get_subscribers(imsi=imsi)
+    if len(resp.data) != 1:
+        raise InvalidRequestError("updating non-unique subscriber")
+
+    # node manager wants both fields
+    name = new_name if new_name else resp.data[0]['name']
+    msisdn = new_msisdn if new_msisdn else resp.data[0]['msisdn']
+
+    message = {
+      'command': 'subscribers',
+      'action': 'update',
+      'match': {'imsi': imsi},
+      'fields': {'name': name, 'msisdn': msisdn}
+      }
+    return self._send_and_receive(message)
+
+  def read_dialdata(self, fields, qualifier):
+    """Reads a dial_data row entry.
+
+    Args:
+      fields: A list of column names in dialdata_table, if None return all
+      qualifier: A dictionary of qualifiers
+
+    Returns:
+      Response instance
+
+    Raises:
+      InvalidRequestError if no qualified entry exists
+    """
+
+    return self._read_subscriber_registry('dialdata_table', fields, qualifier)
+
+
+  def read_sip_buddies(self, fields, qualifier):
+    """Reads a sip_buddies row entry.
+
+    Args:
+      fields: A list of column names in sip_buddies, if None return all
+      qualifier: A dictionary of qualifiers
+
+    Returns:
+      Response instance
+
+    Raises:
+      InvalidRequestError if no qualified entry exists
+    """
+    return self._read_subscriber_registry('sip_buddies', fields, qualifier)
+
+  def update_dialdata(self, fields, qualifier):
+    """Updates a dial_data row entry.
+
+    Args:
+      fields: A dict of values to update
+      qualifier: A dictionary of qualifiers
+
+    Returns:
+      Response instance
+
+    Raises:
+      InvalidRequestError if no qualified entry exists
+    """
+
+    return self._update_subscriber_registry('dialdata_table', fields, qualifier)
+
+  def update_sip_buddies(self, fields, qualifier):
+    """Updates a sip_buddies row entry.
+
+    Args:
+      fields: A dict of values to update
+      qualifier: A dictionary of qualifiers
+
+    Returns:
+      Response instance
+
+    Raises:
+      InvalidRequestError if no qualified entry exists
+    """
+    return self._update_subscriber_registry('sip_buddies', fields, qualifier)
+
+  def _update_subscriber_registry(self, table_name, fields, qualifier):
+    """Reads an entry from one of the subscriber registry tables.
+
+    Args:
+      table_name: the name of the subscriber registry table
+      fields: A dictionary of values of update
+      qualifier: A dictionary of qualifiers
+
+    Returns:
+      Response instance
+
+    Raises:
+      InvalidRequestError if no qualified entry exists
+    """
+
+    # this is the only check we really need to do on the client
+    # node manager will handle the rest
+    if table_name not in ('sip_buddies', 'dialdata_table', 'RRLP'):
+        raise InvalidRequestError('Invalid SR table name')
+    if not isinstance(fields, dict) or not isinstance(qualifier, dict):
+        raise InvalidRequestError('Invalid argument passed')
+
+    message = {
+      'command': table_name,
+      'action': 'update',
+      'match': qualifier,
+      'fields': fields
+    }
+
+    return self._send_and_receive(message)
+
+  def _read_subscriber_registry(self, table_name, fields, qualifier):
+    """Reads an entry from one of the subscriber registry tables.
+
+    Args:
+      table_name: the name of the subscriber registry table
+      fields: A list of column names in the table, if None return all
+      qualifier: A dictionary of qualifiers
+
+    Returns:
+      Response instance
+
+    Raises:
+      InvalidRequestError if no qualified entry exists
+    """
+
+    # this is the only check we really need to do on the client
+    # node manager will handle the rest
+    if table_name not in ('sip_buddies', 'dialdata_table', 'RRLP'):
+        raise InvalidRequestError('Invalid SR table name')
+    if (fields is not None and not isinstance(fields, list)) \
+            or not isinstance(qualifier, dict):
+        raise InvalidRequestError('Invalid argument passed')
+
+    message = {
+      'command': table_name,
+      'action': 'read',
+      'match': qualifier,
+    }
+
+    # specify the fields we want or get them all
+    if fields is not None:
+        message['fields'] = fields
+
+    return self._send_and_receive(message)
 
 class SMQueue(BaseComponent):
   """Manages communication to the SMQueue service.
