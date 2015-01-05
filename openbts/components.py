@@ -153,9 +153,14 @@ class SIPAuthServe(BaseComponent):
     message = {
       'command': 'subscribers',
       'action': 'update',
-      'match': {'imsi': imsi},
-      'fields': {'name': name, 'msisdn': msisdn}
-      }
+      'match': {
+          'imsi': imsi
+       },
+      'fields': {
+          'name': name,
+          'msisdn': msisdn
+       }
+    }
     return self._send_and_receive(message)
 
   def read_dialdata(self, fields, qualifier):
