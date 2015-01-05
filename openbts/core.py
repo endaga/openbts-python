@@ -178,7 +178,8 @@ class Response(object):
       if data['code'] == 404:
         raise InvalidRequestError('not found')
       elif data['code'] == 406:
-        raise InvalidRequestError(data['data'])
+        msg = data['data'] if 'data' in data else 'invalid value'
+        raise InvalidRequestError(msg)
       elif data['code'] == 409:
         # TODO(matt): if creating config values isn't possible, will we ever
         #             see the 409 code?
