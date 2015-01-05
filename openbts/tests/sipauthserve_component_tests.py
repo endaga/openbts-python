@@ -154,7 +154,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
       'dirty': 0
     })
 
-  def test_get_subscribers(self):
+  def test_get_all_subscribers(self):
     """Requesting all subscribers should send a message over zmq and get a
     response.
     """
@@ -167,8 +167,32 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     expected_message = json.dumps({
       'command': 'subscribers',
       'action': 'read',
-      'key': '',
-      'value': ''
+      'match': {},
+    })
+    self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
+                     (expected_message,))
+    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
+    self.assertEqual(response.code, 200)
+
+  def test_get_a_subscribers(self):
+    """Requesting a subscriber using a filter should send a message over
+    zmq and get a response.
+    """
+    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
+      'code': 200,
+      'data': ['subscriber_filtered']
+    })
+    response = self.sipauthserve_connection.get_subscribers(imsi='IMSI000000',
+            msisdn='000000', name='TEST')
+    self.assertTrue(self.sipauthserve_connection.socket.send.called)
+    expected_message = json.dumps({
+      'command': 'subscribers',
+      'action': 'read',
+      'match': {
+          'imsi': 'IMSI000000',
+          'msisdn': '000000',
+          'name': 'TEST'
+          },
     })
     self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
                      (expected_message,))
@@ -236,3 +260,94 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
     self.assertEqual(response.code, 204)
+
+  def test_update_subscriber_by_imsi(self):
+    """Updating a subscriber by passing an IMSI should send a message over zmq
+    and get a response.
+    """
+
+    # for qualifier verification
+    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
+      'code': 204,
+      'data': ['subscriber_filtered']
+    })
+
+    response = self.sipauthserve_connection.update_subscriber(new_name="NEW_NAME",
+            new_msisdn='1234567890', imsi='310150123456789')
+    self.assertTrue(self.sipauthserve_connection.socket.send.called)
+    expected_message = json.dumps({
+      'command': 'subscribers',
+      'action': 'update',
+      'match': {
+        'imsi': '310150123456789'
+      },
+      'fields': {
+          'name' : 'NEW_NAME',
+          'msisdn': '1234567890'
+      }
+    })
+    self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
+                     (expected_message,))
+    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
+    self.assertEqual(response.code, 204)
+
+class SIPAuthServeNominalSubscriberRegistryTestCase(unittest.TestCase):
+  """Testing the components.SIPAuthServe class.
+
+  Applying nominal uses of the read/update commands of the subscriber registry
+  table interface methods.
+  """
+
+  def setUp(self):
+    self.sipauthserve_connection = SIPAuthServe()
+    # mock a zmq socket with a simple recv return value
+    self.sipauthserve_connection.socket = mock.Mock()
+    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
+      'code': 204,
+      'data': 'sample',
+      'dirty': 0
+    })
+
+  def test_read_subscriber_registry(self):
+    """Requesting a table from the subsciber registry should send a message 
+    over zmq and get a response.
+    """
+    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
+      'code': 200,
+      'data': {'ipaddr': '0.0.0.0'}
+    })
+    response = self.sipauthserve_connection.read_sip_buddies(['ipaddr'],
+            {'name': 'NAME'})
+    self.assertTrue(self.sipauthserve_connection.socket.send.called)
+    expected_message = json.dumps({
+      'command': 'sip_buddies',
+      'action': 'read',
+      'match': {'name': 'NAME'},
+      'fields': ['ipaddr']
+    })
+    self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
+                     (expected_message,))
+    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
+    self.assertEqual(response.code, 200)
+
+  def test_update_subscriber_registry(self):
+    """Requesting a table from the subsciber registry should send a message 
+    over zmq and get a response.
+    """
+    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
+      'code': 204,
+    })
+    response = self.sipauthserve_connection.update_sip_buddies({'ipaddr': '0.0.0.0'},
+            {'name': 'NAME'})
+    self.assertTrue(self.sipauthserve_connection.socket.send.called)
+    expected_message = json.dumps({
+      'command': 'sip_buddies',
+      'action': 'update',
+      'match': {'name': 'NAME'},
+      'fields': {'ipaddr': '0.0.0.0' }
+    })
+    self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
+                     (expected_message,))
+    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
+    self.assertEqual(response.code, 204)
+
