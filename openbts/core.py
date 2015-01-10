@@ -24,6 +24,7 @@ class BaseComponent(object):
     # the component inheriting from BaseComponent should call connect on this
     # socket with the appropriate address
     self.socket = context.socket(zmq.REQ)
+    self.socket.setsockopt(zmq.LINGER, 0) # zmq.LINGER sets a timeout for socket.send
     self.socket_timeout = kwargs.pop('socket_timeout', 10)
 
   def create_config(self, key, value):
