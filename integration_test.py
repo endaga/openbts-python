@@ -72,6 +72,12 @@ if __name__ == '__main__':
   connection.create_subscriber(*subscriber_b)
   response = connection.get_subscribers()
   print '  we now have %s subscribers' % len(response.data)
+  response = connection.get_subscribers(name='jon')
+  print '  filtering for jon: %s, length: %d' % (response.data[0]['name'], len(response.data))
+  response = connection.read_sip_buddies(['name'], {})
+  print '  getting the sip_buddies names  %s' % response.data
+  response = connection.read_sip_buddies([], {'name': 'jon'})
+  print '  getting the sip_buddies entries for jon len=%s, fields=%s' % (len(response.data), len(response.data[0]))
   print 'deleting those two subscribers:'
   connection.delete_subscriber(imsi=subscriber_a[1])
   connection.delete_subscriber(imsi=subscriber_b[1])
