@@ -129,26 +129,21 @@ class SIPAuthServe(BaseComponent):
     response = self._send_and_receive(message)
     return response
 
-  def update_subscriber(self, new_name=None, new_msisdn=None, imsi=None):
+  def update_subscriber(self, new_name, new_msisdn, imsi):
     """Update a subscriber by IMSI.
 
     Args:
       imsi: the IMSI of the to-be-updated subscriber
-      new_name: the new name value or None
-      new_msisdn: the new number or None
+      new_name: the new name value
+      new_msisdn: the new number
 
     Returns:
       Response instance
+
+    Raises:
+      InvalidRequestError: if a field is missing or request failed
+      InvalidResponseError: if the operation failed
     """
-
-    # verify qualfiers (node manager needs all credentials)
-    resp = self.get_subscribers(imsi=imsi)
-    if len(resp.data) != 1:
-        raise InvalidRequestError("updating non-unique subscriber")
-
-    # node manager wants both fields
-    name = new_name if new_name else resp.data[0]['name']
-    msisdn = new_msisdn if new_msisdn else resp.data[0]['msisdn']
 
     message = {
       'command': 'subscribers',
@@ -157,8 +152,8 @@ class SIPAuthServe(BaseComponent):
           'imsi': imsi
        },
       'fields': {
-          'name': name,
-          'msisdn': msisdn
+          'name': new_name,
+          'msisdn': new_msisdn
        }
     }
     return self._send_and_receive(message)
