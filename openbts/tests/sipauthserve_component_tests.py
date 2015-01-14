@@ -265,13 +265,6 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     """Updating a subscriber by passing an IMSI should send a message over zmq
     and get a response.
     """
-
-    # for qualifier verification
-    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
-      'code': 204,
-      'data': ['subscriber_filtered']
-    })
-
     response = self.sipauthserve_connection.update_subscriber(new_name="NEW_NAME",
             new_msisdn='1234567890', imsi='310150123456789')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
@@ -290,6 +283,72 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
     self.assertEqual(response.code, 204)
+
+class SIPAuthServeNonNominalSubscriberTestCase(unittest.TestCase):
+  """Testing the components.SIPAuthServe class.
+
+  Applying nonnominal uses of the 'subscribers' command and 'sipauthserve' target.
+  """
+
+  def setUp(self):
+    self.sipauthserve_connection = SIPAuthServe()
+    # mock a zmq socket with a simple recv return value
+    self.sipauthserve_connection.socket = mock.Mock()
+    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
+      'code': 200,
+      'data': 'sample',
+      'dirty': 0
+      })
+
+  def test_get_nonexistent_subscribers(self):
+    """Requesting a nonexistent subscriber using a filter should
+       raise an exception
+    """
+    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
+      'code': 404,
+      'data': 'not found'
+      })
+
+    with self.assertRaises(InvalidRequestError):
+        response = self.sipauthserve_connection.get_subscribers(imsi='non-existent',
+                msisdn='000000', name='TEST')
+
+    self.assertTrue(self.sipauthserve_connection.socket.send.called)
+    expected_message = json.dumps({
+      'command': 'subscribers',
+      'action': 'read',
+      'match': {
+          'imsi': 'non-existent',
+          'msisdn': '000000',
+          'name': 'TEST'
+          },
+    })
+    self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
+                     (expected_message,))
+    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
+
+  def test_update_nonexistent_subscriber_by_imsi(self):
+    """Updating a nonexistent subscriber should not raise an exception
+    """
+    response = self.sipauthserve_connection.update_subscriber(new_name="NEW_NAME",
+            new_msisdn='1234567890', imsi='non-existent')
+
+    self.assertTrue(self.sipauthserve_connection.socket.send.called)
+    expected_message = json.dumps({
+      'command': 'subscribers',
+      'action': 'update',
+      'match': {
+        'imsi': 'non-existent'
+      },
+      'fields': {
+          'name' : 'NEW_NAME',
+          'msisdn': '1234567890'
+      }
+    })
+    self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
+                     (expected_message,))
+    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
+    self.assertEqual(response.code, 200)
 
 class SIPAuthServeNominalSubscriberRegistryTestCase(unittest.TestCase):
   """Testing the components.SIPAuthServe class.
@@ -335,7 +394,8 @@ class SIPAuthServeNominalSubscriberRegistryTestCase(unittest.TestCase):
     over zmq and get a response.
     """
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
-      'code': 204,
+      'code': 200,
+      'data': 'SQLITE_DONE'
     })
     response = self.sipauthserve_connection.update_sip_buddies({'ipaddr': '0.0.0.0'},
             {'name': 'NAME'})
@@ -349,5 +409,64 @@ class SIPAuthServeNominalSubscriberRegistryTestCase(unittest.TestCase):
     self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, 204)
+    self.assertEqual(response.code, 200)
 
+class SIPAuthServeNonNominalSubscriberRegistryTestCase(unittest.TestCase):
+  """Testing the components.SIPAuthServe class.
+
+  Applying non-nominal uses of the read/update commands of the subscriber registry
+  table interface methods.
+  """
+
+  def setUp(self):
+    self.sipauthserve_connection = SIPAuthServe()
+    # mock a zmq socket with a simple recv return value
+    self.sipauthserve_connection.socket = mock.Mock()
+    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
+      'code': 204,
+      'data': 'sample',
+      'dirty': 0
+    })
+
+  def test_read_nonexistent_subscriber_registry(self):
+    """Requesting a non-existent table entry should raise an exception
+    """
+    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
+      'code': 404,
+      'data': 'not found'
+    })
+    with self.assertRaises(InvalidRequestError):
+        response = self.sipauthserve_connection.read_sip_buddies(['ipaddr'],
+            {'name': 'non-existent'})
+    self.assertTrue(self.sipauthserve_connection.socket.send.called)
+    expected_message = json.dumps({
+      'command': 'sip_buddies',
+      'action': 'read',
+      'match': {'name': 'non-existent'},
+      'fields': ['ipaddr']
+    })
+    self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
+                     (expected_message,))
+    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
+
+
+  def test_update_nonexistent_subscriber_registry(self):
+    """Updating a non-existent table entry should proceed without an exception
+    """
+    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
+      'code': 200,
+      'data': 'SQL_DONE'
+    })
+    response = self.sipauthserve_connection.update_sip_buddies({'ipaddr': 'blah'},
+        {'name': 'non-existent'})
+    self.assertTrue(self.sipauthserve_connection.socket.send.called)
+    expected_message = json.dumps({
+      'command': 'sip_buddies',
+      'action': 'update',
+      'match': {'name': 'non-existent'},
+      'fields': {'ipaddr': 'blah'}
+    })
+    self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
+                     (expected_message,))
+    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
+    self.assertEqual(response.code, 200)

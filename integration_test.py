@@ -74,6 +74,12 @@ if __name__ == '__main__':
   print '  we now have %s subscribers' % len(response.data)
   response = connection.get_subscribers(name='jon')
   print '  filtering for jon: %s, length: %d' % (response.data[0]['name'], len(response.data))
+  response = connection.update_sip_buddies({'ipaddr': ''},
+          {'name': 'non-existent'})
+  print '  updating nonexistent: %s, code: %d' % (response.data, response.code)
+  response = connection.update_sip_buddies({'name': 'bob'},
+          {'name': 'ada'})
+  print '  updating ada to bob: %s, code: %d' % (response.data, response.code)
   response = connection.read_sip_buddies(['name'], {})
   print '  getting the sip_buddies names  %s' % response.data
   response = connection.read_sip_buddies([], {'name': 'jon'})

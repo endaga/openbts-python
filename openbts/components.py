@@ -269,7 +269,7 @@ class SIPAuthServe(BaseComponent):
 
     # this is the only check we really need to do on the client
     # node manager will handle the rest
-    if table_name not in ('sip_buddies', 'dialdata_table', 'RRLP'):
+    if table_name not in ('sip_buddies', 'dialdata_table'):
         raise InvalidRequestError('Invalid SR table name')
     if (fields is not None and not isinstance(fields, list)) \
             or not isinstance(qualifier, dict):
@@ -279,11 +279,8 @@ class SIPAuthServe(BaseComponent):
       'command': table_name,
       'action': 'read',
       'match': qualifier,
+      'fields': fields,
     }
-
-    # specify the fields we want or get them all
-    if fields is not None:
-        message['fields'] = fields
 
     return self._send_and_receive(message)
 
