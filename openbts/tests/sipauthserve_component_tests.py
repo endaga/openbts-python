@@ -9,6 +9,7 @@ import mock
 
 from openbts.components import SIPAuthServe
 from openbts.exceptions import InvalidRequestError
+from openbts.codes import (SuccessCode, ErrorCode)
 
 
 class SIPAuthServeNominalConfigTestCase(unittest.TestCase):
@@ -49,7 +50,7 @@ class SIPAuthServeNominalConfigTestCase(unittest.TestCase):
     # we should have touched the socket again to receive the reply
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
     # verify we received a valid response
-    self.assertEqual(response.code, 204)
+    self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_update_config(self):
     """Updating a key should send a message over zmq and get a response."""
@@ -65,7 +66,7 @@ class SIPAuthServeNominalConfigTestCase(unittest.TestCase):
     self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, 204)
+    self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_delete_config_raises_error(self):
     """Deleting a config key should is not yet supported via NodeManager."""
@@ -172,7 +173,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, 200)
+    self.assertEqual(response.code, SuccessCode.OK)
 
   def test_get_a_subscribers(self):
     """Requesting a subscriber using a filter should send a message over
@@ -197,14 +198,14 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, 200)
+    self.assertEqual(response.code, SuccessCode.OK)
 
   def test_create_subscriber_with_ki(self):
     """Creating a subscriber with a specficied ki should send a message over
     zmq and get a response.
     """
     response = self.sipauthserve_connection.create_subscriber('sample-name',
-        310150123456789, 123456789, 'abc')
+        310150123456789, 123456789, '127.0.0.1', '1234', 'abc')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     expected_message = json.dumps({
       'command': 'subscribers',
@@ -213,20 +214,22 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
         'name': 'sample-name',
         'imsi': '310150123456789',
         'msisdn': '123456789',
+        'ipaddr': '127.0.0.1',
+        'port': '1234',
         'ki': 'abc'
       }
     })
     self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, 204)
+    self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_create_subscriber_sans_ki(self):
     """Creating a subscriber without a specficied ki should still send a
     message over zmq and get a response.
     """
     response = self.sipauthserve_connection.create_subscriber('sample-name',
-        310150123456789, 123456789)
+        310150123456789, 123456789, '127.0.0.1', '1234')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     expected_message = json.dumps({
       'command': 'subscribers',
@@ -235,13 +238,15 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
         'name': 'sample-name',
         'imsi': '310150123456789',
         'msisdn': '123456789',
+        'ipaddr': '127.0.0.1',
+        'port': '1234',
         'ki': ''
       }
     })
     self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, 204)
+    self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_delete_subscriber_by_imsi(self):
     """Deleting a subscriber by passing an IMSI should send a message over zmq
@@ -259,14 +264,14 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, 204)
+    self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_update_subscriber_by_imsi(self):
     """Updating a subscriber by passing an IMSI should send a message over zmq
     and get a response.
     """
     response = self.sipauthserve_connection.update_subscriber(new_name="NEW_NAME",
-            new_msisdn='1234567890', imsi='310150123456789')
+            new_msisdn='1234567890', new_ipaddr='127.0.0.1', new_port='1234', imsi='310150123456789')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     expected_message = json.dumps({
       'command': 'subscribers',
@@ -276,13 +281,15 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
       },
       'fields': {
           'name' : 'NEW_NAME',
-          'msisdn': '1234567890'
+          'msisdn': '1234567890',
+          'ipaddr': '127.0.0.1',
+          'port': '1234'
       }
     })
     self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, 204)
+    self.assertEqual(response.code, SuccessCode.NoContent)
 
 class SIPAuthServeNonNominalSubscriberTestCase(unittest.TestCase):
   """Testing the components.SIPAuthServe class.
@@ -331,7 +338,7 @@ class SIPAuthServeNonNominalSubscriberTestCase(unittest.TestCase):
     """Updating a nonexistent subscriber should not raise an exception
     """
     response = self.sipauthserve_connection.update_subscriber(new_name="NEW_NAME",
-            new_msisdn='1234567890', imsi='non-existent')
+            new_msisdn='1234567890', new_ipaddr='127.0.0.1', new_port='1234', imsi='non-existent')
 
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     expected_message = json.dumps({
@@ -342,13 +349,15 @@ class SIPAuthServeNonNominalSubscriberTestCase(unittest.TestCase):
       },
       'fields': {
           'name' : 'NEW_NAME',
-          'msisdn': '1234567890'
+          'msisdn': '1234567890',
+          'ipaddr': '127.0.0.1',
+          'port': '1234'
       }
     })
     self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, 200)
+    self.assertEqual(response.code, SuccessCode.OK)
 
 class SIPAuthServeNominalSubscriberRegistryTestCase(unittest.TestCase):
   """Testing the components.SIPAuthServe class.
@@ -387,7 +396,7 @@ class SIPAuthServeNominalSubscriberRegistryTestCase(unittest.TestCase):
     self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, 200)
+    self.assertEqual(response.code, SuccessCode.OK)
 
   def test_update_subscriber_registry(self):
     """Requesting a table from the subsciber registry should send a message 
@@ -409,7 +418,7 @@ class SIPAuthServeNominalSubscriberRegistryTestCase(unittest.TestCase):
     self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, 200)
+    self.assertEqual(response.code, SuccessCode.OK)
 
 class SIPAuthServeNonNominalSubscriberRegistryTestCase(unittest.TestCase):
   """Testing the components.SIPAuthServe class.
@@ -469,4 +478,4 @@ class SIPAuthServeNonNominalSubscriberRegistryTestCase(unittest.TestCase):
     self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, 200)
+    self.assertEqual(response.code, SuccessCode.OK)

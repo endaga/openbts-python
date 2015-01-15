@@ -9,6 +9,7 @@ import mock
 
 from openbts.components import OpenBTS
 from openbts.exceptions import InvalidRequestError
+from openbts.codes import (SuccessCode, ErrorCode)
 
 
 class OpenBTSNominalConfigTestCase(unittest.TestCase):
@@ -49,7 +50,7 @@ class OpenBTSNominalConfigTestCase(unittest.TestCase):
     # we should have touched the socket again to receive the reply
     self.assertTrue(self.openbts_connection.socket.recv.called)
     # verify we received a valid response
-    self.assertEqual(response.code, 204)
+    self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_update_config(self):
     """Updating a key should send a message over zmq and get a response."""
@@ -79,7 +80,7 @@ class OpenBTSNominalConfigTestCase(unittest.TestCase):
       'data': 'sample'
     })
     response = self.openbts_connection.read_config('sample-key')
-    self.assertEqual(response.code, 200)
+    self.assertEqual(response.code, SuccessCode.OK)
 
   def test_responses_with_no_data_param(self):
     """We should handle responses that don't have the 'data' attribute."""
@@ -87,7 +88,7 @@ class OpenBTSNominalConfigTestCase(unittest.TestCase):
       'code': 200,
     })
     response = self.openbts_connection.read_config('sample-key')
-    self.assertEqual(response.code, 200)
+    self.assertEqual(response.code, SuccessCode.OK)
 
 
 class OpenBTSOffNominalConfigTestCase(unittest.TestCase):

@@ -81,7 +81,7 @@ class SIPAuthServe(BaseComponent):
     response = self._send_and_receive(message)
     return response
 
-  def create_subscriber(self, name, imsi, msisdn, ki=''):
+  def create_subscriber(self, name, imsi, msisdn, ipaddr, port, ki=''):
     """Add a subscriber.
 
     If the 'ki' argument is given, OpenBTS will use full auth.  Otherwise the
@@ -92,6 +92,8 @@ class SIPAuthServe(BaseComponent):
       name: name of the subscriber
       imsi: IMSI of the subscriber
       msisdn: MSISDN of the subscriber
+      ip: IP of the subscriber
+      port: port of the subscriber
       ki: authentication key of the subscriber
 
     Returns:
@@ -104,6 +106,8 @@ class SIPAuthServe(BaseComponent):
         'name': name,
         'imsi': str(imsi),
         'msisdn': str(msisdn),
+        'ipaddr': str(ipaddr),
+        'port': str(port),
         'ki': str(ki)
       }
     }
@@ -129,13 +133,15 @@ class SIPAuthServe(BaseComponent):
     response = self._send_and_receive(message)
     return response
 
-  def update_subscriber(self, new_name, new_msisdn, imsi):
+  def update_subscriber(self, new_name, new_msisdn, new_ipaddr, new_port, imsi):
     """Update a subscriber by IMSI.
 
     Args:
       imsi: the IMSI of the to-be-updated subscriber
       new_name: the new name value
       new_msisdn: the new number
+      new_ipaddr: the new ipaddr
+      new_port: the new port
 
     Returns:
       Response instance
@@ -153,7 +159,9 @@ class SIPAuthServe(BaseComponent):
        },
       'fields': {
           'name': new_name,
-          'msisdn': new_msisdn
+          'msisdn': new_msisdn,
+          'ipaddr': new_ipaddr,
+          'port': new_port
        }
     }
     return self._send_and_receive(message)

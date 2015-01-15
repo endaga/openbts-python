@@ -11,7 +11,7 @@ import zmq
 
 from openbts.core import BaseComponent
 from openbts.exceptions import TimeoutError
-
+from openbts.codes import (SuccessCode, ErrorCode)
 
 class BaseComponentTestCase(unittest.TestCase):
   """Testing the core.BaseComponent class.
