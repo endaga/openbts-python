@@ -66,8 +66,8 @@ if __name__ == '__main__':
   print 'testing SIPAuthServe subscriber operations:'
   print '  we currently have %s subscribers' % len(response.data)
   print 'creating two subscribers:'
-  subscriber_a = ('jon', 0123, 4567)
-  subscriber_b = ('ada', 8901, 2345, 6789)
+  subscriber_a = ('jon', 0123, 4567, '127.0.0.1', '8888')
+  subscriber_b = ('ada', 8901, 2345, '123.234.123.234', '4321', 6789)
   connection.create_subscriber(*subscriber_a)
   connection.create_subscriber(*subscriber_b)
   response = connection.get_subscribers()
