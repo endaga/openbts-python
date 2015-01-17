@@ -377,7 +377,7 @@ class SIPAuthServeNominalSubscriberRegistryTestCase(unittest.TestCase):
     })
 
   def test_read_subscriber_registry(self):
-    """Requesting a table from the subsciber registry should send a message 
+    """Requesting a table entry from the subsciber registry should send a message
     over zmq and get a response.
     """
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
@@ -399,7 +399,7 @@ class SIPAuthServeNominalSubscriberRegistryTestCase(unittest.TestCase):
     self.assertEqual(response.code, SuccessCode.OK)
 
   def test_update_subscriber_registry(self):
-    """Requesting a table from the subsciber registry should send a message 
+    """Updating a table entry the subsciber registry should send a message
     over zmq and get a response.
     """
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
