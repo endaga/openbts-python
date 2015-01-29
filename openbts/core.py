@@ -8,6 +8,7 @@ import zmq
 
 from openbts.exceptions import (InvalidRequestError, InvalidResponseError,
                                 TimeoutError)
+from openbts.codes import (SuccessCode, ErrorCode)
 
 class BaseComponent(object):
   """Manages a zeromq connection.
@@ -24,6 +25,7 @@ class BaseComponent(object):
     # the component inheriting from BaseComponent should call connect on this
     # socket with the appropriate address
     self.socket = context.socket(zmq.REQ)
+    self.socket.setsockopt(zmq.LINGER, 0) # zmq.LINGER sets a timeout for socket.send
     self.socket_timeout = kwargs.pop('socket_timeout', 10)
 
   def create_config(self, key, value):
@@ -157,33 +159,30 @@ class Response(object):
     dirty: boolean that, if True, indicates that the command will take effect
         only when the component is restarted
   """
-
-  success_codes = [200, 304, 204]
-  error_codes = [404, 406, 409, 500]
-
   def __init__(self, raw_response_data):
     data = json.loads(raw_response_data)
     if 'code' not in data.keys():
       raise InvalidResponseError('key "code" not in raw response: "%s"' %
                                  raw_response_data)
     # if the request was successful, create a response object and exit
-    if data['code'] in self.success_codes:
-      self.code = data['code']
+    if data['code'] in list(SuccessCode):
+      self.code = SuccessCode(data['code'])
       self.data = data.get('data', None)
       self.dirty = data.get('dirty', None)
       return
 
     # if the request failed for some reason, raise an error
-    if data['code'] in self.error_codes:
-      if data['code'] == 404:
-        raise InvalidRequestError('unknown key')
-      elif data['code'] == 406:
-        raise InvalidRequestError('invalid value')
-      elif data['code'] == 409:
+    if data['code'] in list(ErrorCode):
+      if data['code'] == ErrorCode.NotFound:
+        raise InvalidRequestError('not found')
+      elif data['code'] == ErrorCode.InvalidRequest:
+        msg = data['data'] if 'data' in data else 'invalid value'
+        raise InvalidRequestError(msg)
+      elif data['code'] == ErrorCode.ConflictingValue:
         # TODO(matt): if creating config values isn't possible, will we ever
         #             see the 409 code?
         raise InvalidRequestError('conflicting value')
-      elif data['code'] == 500:
+      elif data['code'] == ErrorCode.StoreFailed:
         raise InvalidRequestError('storing new value failed')
     # handle unknown response codes
     else:

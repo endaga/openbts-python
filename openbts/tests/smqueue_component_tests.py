@@ -9,6 +9,7 @@ import mock
 
 from openbts.components import SMQueue
 from openbts.exceptions import InvalidRequestError
+from openbts.codes import (SuccessCode, ErrorCode)
 
 
 class SMQueueNominalConfigTestCase(unittest.TestCase):
@@ -49,7 +50,7 @@ class SMQueueNominalConfigTestCase(unittest.TestCase):
     # we should have touched the socket again to receive the reply
     self.assertTrue(self.smqueue_connection.socket.recv.called)
     # verify we received a valid response
-    self.assertEqual(response.code, 204)
+    self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_update_config(self):
     """Updating a key should send a message over zmq and get a response."""
@@ -65,7 +66,7 @@ class SMQueueNominalConfigTestCase(unittest.TestCase):
     self.assertEqual(self.smqueue_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.smqueue_connection.socket.recv.called)
-    self.assertEqual(response.code, 204)
+    self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_delete_config_raises_error(self):
     """Deleting a config key should is not yet supported via NodeManager."""
