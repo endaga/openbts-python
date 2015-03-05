@@ -359,6 +359,18 @@ class SIPAuthServeNonNominalSubscriberTestCase(unittest.TestCase):
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
     self.assertEqual(response.code, SuccessCode.OK)
 
+  def test_delete_subscriber_when_sqlite_unavailable(self):
+    """Testing the subscriber deletion case when OpenBTS reports sqlite is unavailble"""
+    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
+      'code': 503,
+      'data': { 'sip_buddies': 'something bad',
+                'dialdata_table': 'this could be ok'
+              }
+      })
+
+    with self.assertRaises(InvalidRequestError):
+        response = self.sipauthserve_connection.delete_subscriber(310150123456789)
+
 class SIPAuthServeNominalSubscriberRegistryTestCase(unittest.TestCase):
   """Testing the components.SIPAuthServe class.
 

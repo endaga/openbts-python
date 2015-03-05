@@ -184,6 +184,10 @@ class Response(object):
         raise InvalidRequestError('conflicting value')
       elif data['code'] == ErrorCode.StoreFailed:
         raise InvalidRequestError('storing new value failed')
+      elif data['code'] == ErrorCode.ServiceUnavailable:
+        raise InvalidRequestError('service unavailable')
+      elif data['code'] == ErrorCode.UnknownAction:
+        raise InvalidRequestError('unknown action')
     # handle unknown response codes
     else:
       raise InvalidResponseError('code "%s" not known' % data['code'])
