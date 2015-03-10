@@ -58,6 +58,8 @@ MIT
 
 
 ### releases
+* 0.0.5 - pypi points to Endaga fork
+* 0.0.4 - expands SIPAuthServe and SR tables
 * 0.0.3 - SMQueue config operations, OpenBTS monitoring, SIPAuthServe config and subscriber operations, version command for all components
 * 0.0.2 - config reading and updating for the OpenBTS component
 * 0.0.1 - barebones setup for pypi
@@ -92,7 +94,7 @@ $ python integration_test.py
 
 
 ### release process
-you need a ~/.pypirc like this:
+you need a `~/.pypirc` like this:
 
 ```
 [distutils]
