@@ -58,6 +58,7 @@ MIT
 
 
 ### releases
+* 0.0.6 - fixes distribution manifest
 * 0.0.5 - pypi points to Endaga fork
 * 0.0.4 - expands SIPAuthServe and SR tables
 * 0.0.3 - SMQueue config operations, OpenBTS monitoring, SIPAuthServe config and subscriber operations, version command for all components
