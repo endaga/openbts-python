@@ -50,6 +50,25 @@ class SIPAuthServe(BaseComponent):
   def __repr__(self):
     return 'SIPAuthServe component'
 
+  def count_subscribers(self):
+    """Counts the total number of subscribers.
+
+    Returns:
+      integer number of subscribers
+    """
+    message = {
+      'command': 'subscribers',
+      'action': 'read',
+      'match': {}
+    }
+    try:
+      response = self._send_and_receive(message)
+      result = len(response.data)
+    except InvalidRequestError:
+      # 404 -- no subscribers found.
+      result = 0
+    return result
+
   def get_subscribers(self, imsi=None, msisdn=None, name=None):
     """Gets subscribers filtering by IMSI, MSISDN, and/or name
 
