@@ -100,19 +100,22 @@ class SIPAuthServe(BaseComponent):
     response = self._send_and_receive(message)
     return response
 
-  def create_subscriber(self, name, imsi, msisdn, ipaddr, port, ki=''):
+  def create_subscriber(self, imsi, msisdn, ipaddr, port, name='', ki=''):
     """Add a subscriber.
+
+    Technically we don't need every subscriber to have a number, but we'll just
+    enforce this by convention.
 
     If the 'ki' argument is given, OpenBTS will use full auth.  Otherwise the
     system will use cache auth.  The values of IMSI, MSISDN and ki will all
     be cast to strings before the message is sent.
 
     Args:
-      name: name of the subscriber
       imsi: IMSI of the subscriber
-      msisdn: MSISDN of the subscriber
-      ip: IP of the subscriber
-      port: port of the subscriber
+      msisdn: MSISDN of the subscriber (their phone number)
+      ipaddr: IP of the subscriber's OpenBTS instance
+      port: port of the subscriber's OpenBTS instance
+      name: name of the subscriber (typically unused as we just use IMSI)
       ki: authentication key of the subscriber
 
     Returns:
@@ -122,11 +125,11 @@ class SIPAuthServe(BaseComponent):
       'command': 'subscribers',
       'action': 'create',
       'fields': {
-        'name': name,
         'imsi': str(imsi),
         'msisdn': str(msisdn),
         'ipaddr': str(ipaddr),
         'port': str(port),
+        'name': name,
         'ki': str(ki)
       }
     }

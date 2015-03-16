@@ -9,7 +9,7 @@ import mock
 
 from openbts.components import SIPAuthServe
 from openbts.exceptions import InvalidRequestError
-from openbts.codes import (SuccessCode, ErrorCode)
+from openbts.codes import SuccessCode
 
 
 class SIPAuthServeNominalConfigTestCase(unittest.TestCase):
@@ -204,8 +204,9 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     """Creating a subscriber with a specficied ki should send a message over
     zmq and get a response.
     """
-    response = self.sipauthserve_connection.create_subscriber('sample-name',
-        310150123456789, 123456789, '127.0.0.1', '1234', 'abc')
+    response = self.sipauthserve_connection.create_subscriber(
+        310150123456789, 123456789, '127.0.0.1', '1234', name='sample-name',
+        ki='abc')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     expected_message = json.dumps({
       'command': 'subscribers',
@@ -228,8 +229,8 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     """Creating a subscriber without a specficied ki should still send a
     message over zmq and get a response.
     """
-    response = self.sipauthserve_connection.create_subscriber('sample-name',
-        310150123456789, 123456789, '127.0.0.1', '1234')
+    response = self.sipauthserve_connection.create_subscriber(
+        310150123456789, 123456789, '127.0.0.1', '1234', name='sample-name')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     expected_message = json.dumps({
       'command': 'subscribers',
