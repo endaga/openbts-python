@@ -58,11 +58,10 @@ class SIPAuthServe(BaseComponent):
     """
     try:
       result = self.get_subscribers()
-      result = len(result)
+      return len(result)
     except InvalidRequestError:
       # 404 -- no subscribers found.
-      result = 0
-    return result
+      return 0
 
   def get_subscribers(self, imsi=None):
     """Gets subscribers, optionally filtering by IMSI.
@@ -93,8 +92,7 @@ class SIPAuthServe(BaseComponent):
     }
     response = self._send_and_receive(message)
     subscribers = response.data
-    # Now query for the associated numbers.  Join on the IMSI to combine data
-    # from sip_buddies and dialdata.
+    # Now attach the associated numbers.
     for subscriber in subscribers:
       subscriber['numbers'] = self.get_numbers(subscriber['name'])
     return subscribers
