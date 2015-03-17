@@ -184,3 +184,11 @@ class SIPAuthServeTest(unittest.TestCase):
     self.conn.delete_subscriber(imsi=self.sub_a_imsi)
     self.conn.delete_subscriber(imsi=self.sub_b_imsi)
     self.assertEqual(0, self.conn.count_subscribers())
+
+  def test_get_imsi_from_number(self):
+    result = self.conn.get_imsi_from_number('5551234')
+    self.assertEqual(self.sub_a_imsi, result)
+
+  def test_get_imsi_from_nonexistent_number(self):
+    with self.assertRaises(openbts.exceptions.InvalidRequestError):
+      self.conn.get_imsi_from_number('5558876')
