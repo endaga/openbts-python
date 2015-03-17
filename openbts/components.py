@@ -117,10 +117,11 @@ class SIPAuthServe(BaseComponent):
     response = self.read_sip_buddies(fields, qualifiers)
     return response.data[0]['port']
 
-  def get_numbers(self, imsi):
-    """Get the numbers associated with a subscriber.
+  def get_numbers(self, imsi=None):
+    """Get just the numbers (exten) associated with an IMSI.
 
-    If imsi is None, get all numbers."""
+    If imsi is None, get all dialdata.
+    """
     fields = ['exten']
     qualifiers = {}
     if imsi:
@@ -159,8 +160,6 @@ class SIPAuthServe(BaseComponent):
       }
     }
     result = self._send_and_receive(message)
-    print result.code
-    print result.data
     return result
 
   def create_subscriber(self, imsi, msisdn, ipaddr, port, ki=''):
@@ -244,36 +243,6 @@ class SIPAuthServe(BaseComponent):
        },
       'fields': {
         'port': new_port,
-       }
-    }
-    return self._send_and_receive(message)
-
-  def update_subscriber(self, imsi, new_msisdn, new_ipaddr, new_port):
-    """Update a subscriber by IMSI.
-
-    Args:
-      imsi: the IMSI of the to-be-updated subscriber
-      new_msisdn: the new number
-      new_ipaddr: the new ipaddr
-      new_port: the new port
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError: if a field is missing or request failed
-      InvalidResponseError: if the operation failed
-    """
-    message = {
-      'command': 'subscribers',
-      'action': 'update',
-      'match': {
-          'imsi': imsi
-       },
-      'fields': {
-          'msisdn': new_msisdn,
-          'ipaddr': new_ipaddr,
-          'port': new_port,
        }
     }
     return self._send_and_receive(message)

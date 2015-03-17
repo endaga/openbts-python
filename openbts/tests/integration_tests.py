@@ -101,16 +101,30 @@ class SIPAuthServeTest(unittest.TestCase):
   def test_subscriber_count(self):
     self.assertEqual(2, self.conn.count_subscribers())
 
-  def test_subscriber_filter(self):
-    result = self.conn.get_subscribers(imsi=self.sub_a_imsi)
-    expected_data = {
+  def test_get_all_subscribers(self):
+    result = self.conn.get_subscribers()
+    expected_data = [{
       'name': self.sub_a_imsi,
       'ipaddr': '127.0.0.1',
       'port': '8888',
       'numbers': ['5551234']
-    }
-    self.assertEqual(1, len(result))
-    self.assertEqual(expected_data, result[0])
+    }, {
+      'name': self.sub_b_imsi,
+      'ipaddr': '123.234.123.234',
+      'port': '8000',
+      'numbers': ['5556789']
+    }]
+    self.assertItemsEqual(expected_data, result)
+
+  def test_subscriber_filter(self):
+    result = self.conn.get_subscribers(imsi=self.sub_a_imsi)
+    expected_data = [{
+      'name': self.sub_a_imsi,
+      'ipaddr': '127.0.0.1',
+      'port': '8888',
+      'numbers': ['5551234']
+    }]
+    self.assertEqual(expected_data, result)
 
   def test_get_ipaddr(self):
     self.assertEqual('123.234.123.234', self.conn.get_ipaddr(self.sub_b_imsi))
