@@ -71,7 +71,12 @@ class SIPAuthServe(BaseComponent):
       imsi: the IMSI to search by
 
     Returns:
-      array of subscriber dicts
+      an array of subscriber dicts, themselves of the form: {
+        'name': 'IMSI000123',
+        'ip': '127.0.0.1',
+        'port': '8888',
+        'numbers': ['5551234', '5556789']
+      }
 
     Raises:
       InvalidRequestError if no qualified entry exists
@@ -88,14 +93,10 @@ class SIPAuthServe(BaseComponent):
     }
     response = self._send_and_receive(message)
     subscribers = response.data
-    # Now query for the associated numbers.  And join on the IMSI to combine
-    # data from sip_buddies and dialdata.
-    numbers = self.get_numbers(imsi)
+    # Now query for the associated numbers.  Join on the IMSI to combine data
+    # from sip_buddies and dialdata.
     for subscriber in subscribers:
-      subscriber['numbers'] = []
-      for number in numbers:
-        if subscriber['name'] == number:
-          subscriber['numbers'].append(number['exten'])
+      subscriber['numbers'] = self.get_numbers(subscriber['name'])
     return subscribers
 
   def get_ipaddr(self, imsi):
@@ -118,7 +119,7 @@ class SIPAuthServe(BaseComponent):
 
   def get_numbers(self, imsi):
     """Get the numbers associated with a subscriber.
-    
+
     If imsi is None, get all numbers."""
     fields = ['exten']
     qualifiers = {}
@@ -128,7 +129,12 @@ class SIPAuthServe(BaseComponent):
     return [d['exten'] for d in response.data]
 
   def add_number(self, imsi, number):
-    """Associate a new number with an IMSI."""
+    """Associate a new number with an IMSI.
+
+    If the number's already been added, do nothing.
+    """
+    if number in self.get_numbers(imsi):
+      return False
     message = {
       'command': 'dialdata_table',
       'action': 'create',
@@ -192,6 +198,7 @@ class SIPAuthServe(BaseComponent):
       }
     }
     response = self._send_and_receive(message)
+    self.add_number(imsi, msisdn)
     return response
 
   def delete_subscriber(self, imsi):

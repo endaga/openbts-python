@@ -103,8 +103,14 @@ class SIPAuthServeTest(unittest.TestCase):
 
   def test_subscriber_filter(self):
     result = self.conn.get_subscribers(imsi=self.sub_a_imsi)
+    expected_data = {
+      'name': self.sub_a_imsi,
+      'ipaddr': '127.0.0.1',
+      'port': '8888',
+      'numbers': ['5551234']
+    }
     self.assertEqual(1, len(result))
-    self.assertTrue(self.sub_a_imsi, result[0]['name'])
+    self.assertEqual(expected_data, result[0])
 
   def test_get_ipaddr(self):
     self.assertEqual('123.234.123.234', self.conn.get_ipaddr(self.sub_b_imsi))
@@ -127,6 +133,13 @@ class SIPAuthServeTest(unittest.TestCase):
     """A subscriber can have multiple associated numbers."""
     self.conn.add_number(self.sub_a_imsi, '5557744')
     expected_numbers = ['5551234', '5557744']
+    self.assertItemsEqual(expected_numbers,
+                          self.conn.get_numbers(self.sub_a_imsi))
+
+  def test_add_preexisting_number(self):
+    """If we try to add a pre-existing number, do nothing."""
+    self.conn.add_number(self.sub_a_imsi, '5551234')
+    expected_numbers = ['5551234']
     self.assertItemsEqual(expected_numbers,
                           self.conn.get_numbers(self.sub_a_imsi))
 
