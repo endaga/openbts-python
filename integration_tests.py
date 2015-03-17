@@ -108,12 +108,14 @@ class SIPAuthServeTest(unittest.TestCase):
       'name': self.sub_a_imsi,
       'ipaddr': '127.0.0.1',
       'port': '8888',
-      'numbers': ['5551234']
+      'numbers': ['5551234'],
+      'account_balance': '0',
     }, {
       'name': self.sub_b_imsi,
       'ipaddr': '123.234.123.234',
       'port': '8000',
-      'numbers': ['5556789']
+      'numbers': ['5556789'],
+      'account_balance': '0',
     }]
     self.assertItemsEqual(expected_data, result)
 
@@ -123,7 +125,8 @@ class SIPAuthServeTest(unittest.TestCase):
       'name': self.sub_a_imsi,
       'ipaddr': '127.0.0.1',
       'port': '8888',
-      'numbers': ['5551234']
+      'numbers': ['5551234'],
+      'account_balance': '0',
     }]
     self.assertEqual(expected_data, result)
 

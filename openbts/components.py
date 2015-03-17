@@ -74,7 +74,8 @@ class SIPAuthServe(BaseComponent):
         'name': 'IMSI000123',
         'ip': '127.0.0.1',
         'port': '8888',
-        'numbers': ['5551234', '5556789']
+        'numbers': ['5551234', '5556789'],
+        'account_balance': '1000',
       }
 
     Raises:
@@ -95,9 +96,11 @@ class SIPAuthServe(BaseComponent):
       subscribers = response.data
     except InvalidRequestError:
       subscribers = []
-    # Now attach the associated numbers.
+    # Now attach the associated numbers and account balance info.
     for subscriber in subscribers:
       subscriber['numbers'] = self.get_numbers(subscriber['name'])
+      subscriber['account_balance'] = self.get_account_balance(
+          subscriber['name'])
     return subscribers
 
   def get_ipaddr(self, imsi):
