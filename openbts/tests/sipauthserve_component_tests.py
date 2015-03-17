@@ -205,15 +205,14 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     zmq and get a response.
     """
     response = self.sipauthserve_connection.create_subscriber(
-        310150123456789, 123456789, '127.0.0.1', '1234', name='sample-name',
-        ki='abc')
+        310150123456789, 123456789, '127.0.0.1', '1234', ki='abc')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     expected_message = json.dumps({
       'command': 'subscribers',
       'action': 'create',
       'fields': {
-        'name': 'sample-name',
         'imsi': '310150123456789',
+        'name': '310150123456789',
         'msisdn': '123456789',
         'ipaddr': '127.0.0.1',
         'port': '1234',
@@ -230,13 +229,13 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     message over zmq and get a response.
     """
     response = self.sipauthserve_connection.create_subscriber(
-        310150123456789, 123456789, '127.0.0.1', '1234', name='sample-name')
+        310150123456789, 123456789, '127.0.0.1', '1234')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     expected_message = json.dumps({
       'command': 'subscribers',
       'action': 'create',
       'fields': {
-        'name': 'sample-name',
+        'name': '310150123456789',
         'imsi': '310150123456789',
         'msisdn': '123456789',
         'ipaddr': '127.0.0.1',

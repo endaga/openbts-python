@@ -1,95 +1,147 @@
-"""integration testing
+"""Integration testing -- requires OpenBTS components to be running.
+
+Usage (from the repo's root):
+  $ nosetests
+  $ nosetests openbts.tests.integration_tests:SIPAuthServeTest
+  $ nosetests openbts.tests.integration_tests:SIPAuthServeTest.test_one_thing
+
+Warning: this will change live values in OpenBTS.
 """
-import sys
+import unittest
 
-import zmq
-
-from openbts.components import OpenBTS, SMQueue, SIPAuthServe
-
-if __name__ == '__main__':
-  print ''
-  print 'note: this script must be run against a live OpenBTS instance'
-  print 'warning: during the test, this script will modify live config values'
-  value = raw_input('\ncontinue? (y/n) ')
-  if value.lower() != 'y':
-    print 'exiting'
-    sys.exit(1)
-  print ''
+import openbts
 
 
-  """ testing version querying
-  """
-  components = (OpenBTS, SIPAuthServe, SMQueue)
-  print 'getting component versions:'
-  for component in components:
-    connection = component()
+class VersionTest(unittest.TestCase):
+  """We can read version data without throwing errors."""
+
+  def test_query_openbts_version(self):
+    connection = openbts.components.OpenBTS()
     response = connection.get_version()
-    print '  %s: %s' % (connection, response.data)
-  print ''
+    self.assertTrue(str, isinstance(response.data))
+
+  def test_query_sipauthserve_version(self):
+    connection = openbts.components.SIPAuthServe()
+    response = connection.get_version()
+    self.assertTrue(str, isinstance(response.data))
+
+  def test_query_smqueue_version(self):
+    connection = openbts.components.SMQueue()
+    response = connection.get_version()
+    self.assertTrue(str, isinstance(response.data))
 
 
-  """ testing nominal config reads and updates
-  """
-  component_tests = [
-    (OpenBTS, 'Control.NumSQLTries', '6'),
-    (SIPAuthServe, 'Log.Alarms.Max', '12'),
-    (SMQueue, 'Bounce.Code', 555)
-  ]
-  for entry in component_tests:
-    print 'testing the %s config operations:' % entry[0]()
-    connection = entry[0]()
-    response = connection.read_config(entry[1])
+class ConfigReadTest(unittest.TestCase):
+  """We can read config vars without throwing errors."""
+
+  def test_read_openbts_config(self):
+    connection = openbts.components.OpenBTS()
+    connection.read_config('Control.NumSQLTries')
+
+  def test_read_sipauthserve_config(self):
+    connection = openbts.components.SIPAuthServe()
+    connection.read_config('Log.Alarms.Max')
+
+  def test_read_smqueue_config(self):
+    connection = openbts.components.SMQueue()
+    connection.read_config('Bounce.Code')
+
+
+class ConfigUpdateTest(unittest.TestCase):
+  """We can update config vars without throwing errors."""
+
+  def test_update_openbts_config(self):
+    connection = openbts.components.OpenBTS()
+    key = 'Control.NumSQLTries'
+    response = connection.read_config(key)
     original_value = response.data['value']
-    print '  original value of %s: %s' % (entry[1], original_value)
-    connection.update_config(entry[1], entry[2])
-    response = connection.read_config(entry[1])
-    print '  set %s to %s' % (entry[1], entry[2])
-    connection.update_config(entry[1], original_value)
-    response = connection.read_config(entry[1])
-    print '  reverted %s to %s' % (entry[1], response.data['value'])
-    print ''
+    connection.update_config(key, 6)
+    connection.update_config(key, original_value)
+
+  def test_update_sipauthserve_config(self):
+    connection = openbts.components.SIPAuthServe()
+    key = 'Log.Alarms.Max'
+    response = connection.read_config(key)
+    original_value = response.data['value']
+    connection.update_config(key, 12)
+    connection.update_config(key, original_value)
+
+  def test_update_smqueue_config(self):
+    connection = openbts.components.SMQueue()
+    key = 'Bounce.Code'
+    response = connection.read_config(key)
+    original_value = response.data['value']
+    connection.update_config(key, 555)
+    connection.update_config(key, original_value)
 
 
-  """ testing nominal OpenBTS monitoring
-  """
-  print 'getting OpenBTS monitoring data:'
-  connection = OpenBTS()
-  response = connection.monitor()
-  print '  noise RSSI: %s' % response.data['noiseRSSI']
-  print ''
+class OpenBTSMonitoringTest(unittest.TestCase):
+
+  def test_monitor_openbts(self):
+    connection = openbts.components.OpenBTS()
+    response = connection.monitor()
+    self.assertIn(response.data, 'noiseRSSI')
 
 
-  """ testing nominal SIPAuthServe subscriber operations
-  """
-  connection = SIPAuthServe()
-  response = connection.get_subscribers()
-  print 'testing SIPAuthServe subscriber operations:'
-  print '  we currently have %s subscribers' % len(response.data)
-  print 'creating two subscribers:'
-  subscriber_a = ('jon', 0123, 4567, '127.0.0.1', '8888')
-  subscriber_b = ('ada', 8901, 2345, '123.234.123.234', '4321', 6789)
-  connection.create_subscriber(*subscriber_a)
-  connection.create_subscriber(*subscriber_b)
-  response = connection.get_subscribers()
-  print '  we now have %s subscribers' % len(response.data)
-  response = connection.get_subscribers(name='jon')
-  print '  filtering for jon: %s, length: %d' % (response.data[0]['name'], len(response.data))
-  response = connection.update_sip_buddies({'ipaddr': ''},
-          {'name': 'non-existent'})
-  print '  updating nonexistent: %s, code: %d' % (response.data, response.code)
-  response = connection.update_sip_buddies({'name': 'bob'},
-          {'name': 'ada'})
-  print '  updating ada to bob: %s, code: %d' % (response.data, response.code)
-  response = connection.read_sip_buddies(['name'], {})
-  print '  getting the sip_buddies names  %s' % response.data
-  response = connection.read_sip_buddies([], {'name': 'jon'})
-  print '  getting the sip_buddies entries for jon len=%s, fields=%s' % (len(response.data), len(response.data[0]))
-  print 'deleting those two subscribers:'
-  connection.delete_subscriber(imsi=subscriber_a[1])
-  connection.delete_subscriber(imsi=subscriber_b[1])
-  response = connection.get_subscribers()
-  print "  and we're back to %s subscribers" % len(response.data)
+class SIPAuthServeTest(unittest.TestCase):
+  """Testing SIPAuthServe subscriber and number operations."""
 
+  def setUp(self):
+    self.conn = openbts.components.SIPAuthServe()
+    self.sub_a_imsi, self.sub_b_imsi = 'IMSI000123', 'IMSI000789'
+    self.conn.create_subscriber(self.sub_a_imsi, '5551234', '127.0.0.1',
+                                '8888')
+    self.conn.create_subscriber(self.sub_b_imsi, '5556789', '123.234.123.234',
+                                '8000', ki=6789)
 
-  print '\nintegration test complete.'
-  print ''
+  def tearDown(self):
+    self.conn.delete_subscriber(imsi=self.sub_a_imsi)
+    self.conn.delete_subscriber(imsi=self.sub_b_imsi)
+
+  def test_subscriber_count(self):
+    self.assertEqual(2, self.conn.count_subscribers())
+
+  def test_subscriber_filter(self):
+    result = self.conn.get_subscribers(imsi=self.sub_a_imsi)
+    self.assertEqual(1, len(result))
+    self.assertTrue(self.sub_a_imsi, result[0]['name'])
+
+  def test_get_ipaddr(self):
+    self.assertEqual('123.234.123.234', self.conn.get_ipaddr(self.sub_b_imsi))
+
+  def test_get_port(self):
+    self.assertEqual('8000', self.conn.get_port(self.sub_b_imsi))
+
+  def test_get_single_number(self):
+    self.assertEqual(['5556789'], self.conn.get_numbers(self.sub_b_imsi))
+
+  def test_set_ipaddr(self):
+    self.conn.update_ipaddr(self.sub_a_imsi, '244.255.200.201')
+    self.assertEqual('244.255.200.201', self.conn.get_ipaddr(self.sub_a_imsi))
+
+  def test_set_port(self):
+    self.conn.update_port(self.sub_a_imsi, '9999')
+    self.assertEqual('9999', self.conn.get_port(self.sub_a_imsi))
+
+  def test_associate_more_numbers(self):
+    """A subscriber can have multiple associated numbers."""
+    self.conn.add_number(self.sub_a_imsi, '5557744')
+    expected_numbers = ['5551234', '5557744']
+    self.assertItemsEqual(expected_numbers,
+                          self.conn.get_numbers(self.sub_a_imsi))
+
+  def test_delete_last_number(self):
+    with self.assertRaises(ValueError):
+      self.conn.delete_number(self.sub_a_imsi, '5556789')
+
+  def test_delete_single_number(self):
+    self.conn.add_number(self.sub_a_imsi, '5557744')
+    self.conn.delete_number(self.sub_a_imsi, '5551234')
+    expected_numbers = ['5557744']
+    self.assertItemsEqual(expected_numbers,
+                          self.conn.get_numbers(self.sub_a_imsi))
+
+  def test_delete_subscribers(self):
+    self.conn.delete_subscriber(imsi=self.sub_a_imsi)
+    self.conn.delete_subscriber(imsi=self.sub_b_imsi)
+    self.assertEqual(0, self.conn.count_subscribers())
