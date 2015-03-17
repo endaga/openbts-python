@@ -98,11 +98,12 @@ class SIPAuthServe(BaseComponent):
       subscribers = response.data
     except InvalidRequestError:
       subscribers = []
-    # Now attach the associated numbers and account balance info.
+    # Now attach the associated numbers, account balance and caller_id info.
     for subscriber in subscribers:
       subscriber['numbers'] = self.get_numbers(subscriber['name'])
       subscriber['account_balance'] = self.get_account_balance(
           subscriber['name'])
+      subscriber['caller_id'] = self.get_caller_id(subscriber['name'])
     return subscribers
 
   def get_ipaddr(self, imsi):
@@ -134,6 +135,21 @@ class SIPAuthServe(BaseComponent):
     }
     response = self._send_and_receive(message)
     return response.data[0]['port']
+
+  def get_caller_id(self, imsi):
+    """Get the caller ID of a subscriber."""
+    fields = ['callerid']
+    qualifiers = {
+      'name': imsi
+    }
+    message = {
+      'command': 'sip_buddies',
+      'action': 'read',
+      'match': qualifiers,
+      'fields': fields,
+    }
+    response = self._send_and_receive(message)
+    return response.data[0]['callerid']
 
   def get_numbers(self, imsi=None):
     """Get just the numbers (exten) associated with an IMSI.
@@ -175,6 +191,14 @@ class SIPAuthServe(BaseComponent):
     # First see if the number is attached to the subscriber.
     if number not in self.get_numbers(imsi):
       raise ValueError('number %s not attached to IMSI %s' % (number, imsi))
+    # See if this number is the caller ID.  If it is, promote another number
+    # to be caller ID.
+    if number == self.get_caller_id(imsi):
+      numbers = self.get_numbers(imsi)
+      numbers.remove(number)
+      new_caller_id = numbers[-1]
+      self.update_caller_id(imsi, new_caller_id)
+    # Finally, delete the number.
     message = {
       'command': 'dialdata_table',
       'action': 'delete',
@@ -274,6 +298,23 @@ class SIPAuthServe(BaseComponent):
        },
       'fields': {
         'port': new_port,
+       }
+    }
+    return self._send_and_receive(message)
+
+  def update_caller_id(self, imsi, new_caller_id):
+    """Updates a subscriber's caller_id."""
+    if new_caller_id not in self.get_numbers(imsi):
+      raise ValueError('new caller id %s is not yet associated with subscriber'
+                       ' %s' % (new_caller_id, imsi))
+    message = {
+      'command': 'sip_buddies',
+      'action': 'update',
+      'match': {
+        'name': imsi
+       },
+      'fields': {
+        'callerid': new_caller_id,
        }
     }
     return self._send_and_receive(message)

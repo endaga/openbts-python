@@ -111,12 +111,14 @@ class SIPAuthServeTest(unittest.TestCase):
       'port': '8888',
       'numbers': ['5551234'],
       'account_balance': '0',
+      'caller_id': '5551234',
     }, {
       'name': self.sub_b_imsi,
       'ipaddr': '123.234.123.234',
       'port': '8000',
       'numbers': ['5556789'],
       'account_balance': '0',
+      'caller_id': '5556789',
     }]
     self.assertItemsEqual(expected_data, result)
 
@@ -128,6 +130,7 @@ class SIPAuthServeTest(unittest.TestCase):
       'port': '8888',
       'numbers': ['5551234'],
       'account_balance': '0',
+      'caller_id': '5551234',
     }]
     self.assertEqual(expected_data, result)
 
@@ -216,3 +219,44 @@ class SIPAuthServeTest(unittest.TestCase):
       self.conn.update_account_balance(self.sub_a_imsi, 999)
     with self.assertRaises(TypeError):
       self.conn.update_account_balance(self.sub_a_imsi, 9.99)
+
+
+class CallerIDTest(unittest.TestCase):
+  """Testing SIPAuthServe caller ID operations."""
+
+  def setUp(self):
+    self.conn = openbts.components.SIPAuthServe(socket_timeout=0.1)
+    self.sub_a_imsi = 'IMSI000123'
+    self.sub_b_imsi = 'IMSI000789'
+    self.tearDown()
+    self.conn.create_subscriber(self.sub_a_imsi, '5551234', '127.0.0.1',
+                                '8888')
+    self.conn.create_subscriber(self.sub_b_imsi, '5556789', '123.234.123.234',
+                                '8000', ki=6789)
+
+  def tearDown(self):
+    self.conn.delete_subscriber(imsi=self.sub_a_imsi)
+    self.conn.delete_subscriber(imsi=self.sub_b_imsi)
+
+  def test_get_caller_id(self):
+    self.assertEqual('5556789', self.conn.get_caller_id(self.sub_b_imsi))
+
+  def test_set_caller_id_before_adding_number(self):
+    """The new caller ID must already be associated with the subscriber."""
+    with self.assertRaises(ValueError):
+      self.conn.update_caller_id(self.sub_a_imsi, '5553232')
+
+  def test_set_caller_id_after_associating_number(self):
+    new_number = '5557744'
+    self.conn.add_number(self.sub_a_imsi, new_number)
+    self.conn.update_caller_id(self.sub_a_imsi, new_number)
+    self.assertEqual(new_number, self.conn.get_caller_id(self.sub_a_imsi))
+
+  def test_delete_caller_id_number(self):
+    """Another number will be promoted to the caller_id."""
+    new_number = '5557744'
+    self.conn.add_number(self.sub_a_imsi, new_number)
+    # The original number (added in setUp) is the caller_id until it's deleted.
+    self.assertEqual('5551234', self.conn.get_caller_id(self.sub_a_imsi))
+    self.conn.delete_number(self.sub_a_imsi, '5551234')
+    self.assertEqual(new_number, self.conn.get_caller_id(self.sub_a_imsi))
