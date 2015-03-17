@@ -263,6 +263,21 @@ class SIPAuthServe(BaseComponent):
     }
     return self._send_and_receive(message)
 
+  def get_imsi_from_number(self, number):
+    """Translate a number into an IMSI."""
+    qualifiers = {
+      'exten': number
+    }
+    fields = ['dial', 'exten']
+    message = {
+      'command': 'dialdata_table',
+      'action': 'read',
+      'match': qualifiers,
+      'fields': fields,
+    }
+    result = self._send_and_receive(message)
+    return result.data[0]['dial']
+
 
 class SMQueue(BaseComponent):
   """Manages communication to the SMQueue service.
