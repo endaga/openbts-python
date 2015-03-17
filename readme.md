@@ -58,6 +58,7 @@ MIT
 
 
 ### releases
+* 0.0.9 - prevents `create_subscriber` from adding duplicate IMSIs
 * 0.0.8 - adds `get_imsi_from_number` method
 * 0.0.7 - adds some precise SubscriberRegistry methods and removes some more general ones
 * 0.0.6 - fixes distribution manifest
