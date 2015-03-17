@@ -105,7 +105,13 @@ class SIPAuthServe(BaseComponent):
     qualifiers = {
       'name': imsi
     }
-    response = self.read_sip_buddies(fields, qualifiers)
+    message = {
+      'command': 'sip_buddies',
+      'action': 'read',
+      'match': qualifiers,
+      'fields': fields,
+    }
+    response = self._send_and_receive(message)
     return response.data[0]['ipaddr']
 
   def get_port(self, imsi):
@@ -114,7 +120,13 @@ class SIPAuthServe(BaseComponent):
     qualifiers = {
       'name': imsi
     }
-    response = self.read_sip_buddies(fields, qualifiers)
+    message = {
+      'command': 'sip_buddies',
+      'action': 'read',
+      'match': qualifiers,
+      'fields': fields,
+    }
+    response = self._send_and_receive(message)
     return response.data[0]['port']
 
   def get_numbers(self, imsi=None):
@@ -126,7 +138,13 @@ class SIPAuthServe(BaseComponent):
     qualifiers = {}
     if imsi:
       qualifiers['dial'] = imsi
-    response = self.read_dialdata(fields, qualifiers)
+    message = {
+      'command': 'dialdata_table',
+      'action': 'read',
+      'match': qualifiers,
+      'fields': fields,
+    }
+    response = self._send_and_receive(message)
     return [d['exten'] for d in response.data]
 
   def add_number(self, imsi, number):
@@ -244,124 +262,6 @@ class SIPAuthServe(BaseComponent):
       'fields': {
         'port': new_port,
        }
-    }
-    return self._send_and_receive(message)
-
-  def read_dialdata(self, fields, qualifier):
-    """Reads a dial_data row entry.
-
-    Args:
-      fields: A list of column names in dialdata_table, if None return all
-      qualifier: A dictionary of qualifiers
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError if no qualified entry exists
-    """
-    return self._read_subscriber_registry('dialdata_table', fields, qualifier)
-
-  def read_sip_buddies(self, fields, qualifier):
-    """Reads a sip_buddies row entry.
-
-    Args:
-      fields: A list of column names in sip_buddies, if None return all
-      qualifier: A dictionary of qualifiers
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError if no qualified entry exists
-    """
-    return self._read_subscriber_registry('sip_buddies', fields, qualifier)
-
-  def update_dialdata(self, fields, qualifier):
-    """Updates a dial_data row entry.
-
-    Args:
-      fields: A dict of values to update
-      qualifier: A dictionary of qualifiers
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError if no qualified entry exists
-    """
-
-    return self._update_subscriber_registry('dialdata_table', fields, qualifier)
-
-  def update_sip_buddies(self, fields, qualifier):
-    """Updates a sip_buddies row entry.
-
-    Args:
-      fields: A dict of values to update
-      qualifier: A dictionary of qualifiers
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError if no qualified entry exists
-    """
-    return self._update_subscriber_registry('sip_buddies', fields, qualifier)
-
-  def _update_subscriber_registry(self, table_name, fields, qualifier):
-    """Reads an entry from one of the subscriber registry tables.
-
-    Args:
-      table_name: the name of the subscriber registry table
-      fields: A dictionary of values of update
-      qualifier: A dictionary of qualifiers
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError if no qualified entry exists
-    """
-    # This is the only check we really need to do on the client -- NodeManager
-    # will handle the rest.
-    if table_name not in ('sip_buddies', 'dialdata_table', 'RRLP'):
-        raise InvalidRequestError('Invalid SR table name')
-    if not isinstance(fields, dict) or not isinstance(qualifier, dict):
-        raise InvalidRequestError('Invalid argument passed')
-    message = {
-      'command': table_name,
-      'action': 'update',
-      'match': qualifier,
-      'fields': fields
-    }
-    return self._send_and_receive(message)
-
-  def _read_subscriber_registry(self, table_name, fields, qualifier):
-    """Reads an entry from one of the subscriber registry tables.
-
-    Args:
-      table_name: the name of the subscriber registry table
-      fields: A list of column names in the table, if None return all
-      qualifier: A dictionary of qualifiers
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError if no qualified entry exists
-    """
-    # This is the only check we really need to do on the client NodeManager
-    # will handle the rest.
-    if table_name not in ('sip_buddies', 'dialdata_table'):
-        raise InvalidRequestError('Invalid SR table name')
-    if (fields is not None and not isinstance(fields, list)) \
-            or not isinstance(qualifier, dict):
-        raise InvalidRequestError('Invalid argument passed')
-    message = {
-      'command': table_name,
-      'action': 'read',
-      'match': qualifier,
-      'fields': fields,
     }
     return self._send_and_receive(message)
 
