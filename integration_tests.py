@@ -87,9 +87,10 @@ class SIPAuthServeTest(unittest.TestCase):
   """Testing SIPAuthServe subscriber and number operations."""
 
   def setUp(self):
-    self.conn = openbts.components.SIPAuthServe()
+    self.conn = openbts.components.SIPAuthServe(socket_timeout=0.1)
     self.sub_a_imsi = 'IMSI000123'
     self.sub_b_imsi = 'IMSI000789'
+    self.tearDown()
     self.conn.create_subscriber(self.sub_a_imsi, '5551234', '127.0.0.1',
                                 '8888')
     self.conn.create_subscriber(self.sub_b_imsi, '5556789', '123.234.123.234',
