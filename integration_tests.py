@@ -127,6 +127,17 @@ class SIPAuthServeTest(unittest.TestCase):
     }]
     self.assertEqual(expected_data, result)
 
+  def test_subscriber_filter_nonexistent_imsi(self):
+    result = self.conn.get_subscribers(imsi='IMSI00993322')
+    expected_data = []
+    self.assertEqual(expected_data, result)
+
+  def test_create_duplicate_subscriber(self):
+    """If the IMSI already exists, this should fail."""
+    with self.assertRaises(ValueError):
+      self.conn.create_subscriber(self.sub_a_imsi, '5554321', '127.123.2.3',
+                                  '4499')
+
   def test_get_ipaddr(self):
     self.assertEqual('123.234.123.234', self.conn.get_ipaddr(self.sub_b_imsi))
 

@@ -90,8 +90,11 @@ class SIPAuthServe(BaseComponent):
       'match': qualifiers,
       'fields': fields,
     }
-    response = self._send_and_receive(message)
-    subscribers = response.data
+    try:
+      response = self._send_and_receive(message)
+      subscribers = response.data
+    except InvalidRequestError:
+      subscribers = []
     # Now attach the associated numbers.
     for subscriber in subscribers:
       subscriber['numbers'] = self.get_numbers(subscriber['name'])
@@ -199,7 +202,14 @@ class SIPAuthServe(BaseComponent):
 
     Returns:
       Response instance
+    
+    Raises:
+      ValueError if the IMSI is already registered
     """
+    # First we search for this IMSI to see if it is already registered.
+    result = self.get_subscribers(imsi=imsi)
+    if result:
+      raise ValueError('IMSI %s is already registered.' % imsi)
     message = {
       'command': 'subscribers',
       'action': 'create',
