@@ -88,9 +88,10 @@ class SIPAuthServeTest(unittest.TestCase):
 
   def setUp(self):
     self.conn = openbts.components.SIPAuthServe()
-    self.sub_a_imsi, self.sub_b_imsi = 'IMSI000123', 'IMSI000789'
+    self.sub_a_imsi = 'IMSI000123'
     self.conn.create_subscriber(self.sub_a_imsi, '5551234', '127.0.0.1',
                                 '8888')
+    self.sub_b_imsi = 'IMSI000789'
     self.conn.create_subscriber(self.sub_b_imsi, '5556789', '123.234.123.234',
                                 '8000', ki=6789)
 
