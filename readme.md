@@ -50,7 +50,7 @@ print response.code
 # 200
 ```
 
-see additional examples in `integration_test.py`
+see additional examples in `openbts/tests/integration_tests.py`
 
 
 ### license
@@ -90,7 +90,7 @@ parameters, so run it with caution.  Or, better yet, run it against a system
 not in production.
 
 ```shell
-$ python integration_test.py
+$ nosetests openbts.tests.integration_tests
 ```
 
 
