@@ -50,7 +50,7 @@ print response.code
 # 200
 ```
 
-see additional examples in `integration_test.py`
+see additional examples in `integration_tests.py`
 
 
 ### license
@@ -58,6 +58,7 @@ MIT
 
 
 ### releases
+* 0.0.7 - adds some precise SubscriberRegistry methods and removes some more general ones
 * 0.0.6 - fixes distribution manifest
 * 0.0.5 - pypi points to Endaga fork
 * 0.0.4 - expands SIPAuthServe and SR tables
@@ -75,7 +76,7 @@ MIT
 run unit tests with `nose`:
 
 ```shell
-$ nosetests --with-coverage --cover-package=openbts
+$ nosetests openbts --with-coverage --cover-package=openbts
 ```
 
 We have quite a few similar unit tests between components.
@@ -90,7 +91,9 @@ parameters, so run it with caution.  Or, better yet, run it against a system
 not in production.
 
 ```shell
-$ python integration_test.py
+$ nosetests integration_tests
+$ nosetests integration_tests:SIPAuthServe
+$ nosetests integration_tests:SIPAuthServe.test_get_all_subscribers
 ```
 
 

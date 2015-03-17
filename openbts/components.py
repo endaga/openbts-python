@@ -50,50 +50,151 @@ class SIPAuthServe(BaseComponent):
   def __repr__(self):
     return 'SIPAuthServe component'
 
-  def get_subscribers(self, imsi=None, msisdn=None, name=None):
-    """Gets subscribers filtering by IMSI, MSISDN, and/or name
+  def count_subscribers(self):
+    """Counts the total number of subscribers.
+
+    Returns:
+      integer number of subscribers
+    """
+    try:
+      result = self.get_subscribers()
+      return len(result)
+    except InvalidRequestError:
+      # 404 -- no subscribers found.
+      return 0
+
+  def get_subscribers(self, imsi=None):
+    """Gets subscribers, optionally filtering by IMSI.
 
     Args:
       imsi: the IMSI to search by
-      name: the Name to search by
-      msisdn: the number to search by
 
     Returns:
-      Response instance
+      an array of subscriber dicts, themselves of the form: {
+        'name': 'IMSI000123',
+        'ip': '127.0.0.1',
+        'port': '8888',
+        'numbers': ['5551234', '5556789']
+      }
 
     Raises:
       InvalidRequestError if no qualified entry exists
-
     """
-
-    qualifiers = {'imsi': imsi, 'msisdn': msisdn, 'name': name}
-
-    # remove empty qualifiers
-    for key in qualifiers.keys():
-      if not qualifiers[key]:
-        del qualifiers[key]
-
+    qualifiers = {}
+    if imsi:
+      qualifiers['name'] = imsi
+    fields = ['name', 'ipaddr', 'port']
     message = {
-      'command': 'subscribers',
+      'command': 'sip_buddies',
       'action': 'read',
-      'match': qualifiers
+      'match': qualifiers,
+      'fields': fields,
     }
     response = self._send_and_receive(message)
-    return response
+    subscribers = response.data
+    # Now attach the associated numbers.
+    for subscriber in subscribers:
+      subscriber['numbers'] = self.get_numbers(subscriber['name'])
+    return subscribers
 
-  def create_subscriber(self, name, imsi, msisdn, ipaddr, port, ki=''):
+  def get_ipaddr(self, imsi):
+    """Get the IP address of a subscriber."""
+    fields = ['ipaddr']
+    qualifiers = {
+      'name': imsi
+    }
+    message = {
+      'command': 'sip_buddies',
+      'action': 'read',
+      'match': qualifiers,
+      'fields': fields,
+    }
+    response = self._send_and_receive(message)
+    return response.data[0]['ipaddr']
+
+  def get_port(self, imsi):
+    """Get the port of a subscriber."""
+    fields = ['port']
+    qualifiers = {
+      'name': imsi
+    }
+    message = {
+      'command': 'sip_buddies',
+      'action': 'read',
+      'match': qualifiers,
+      'fields': fields,
+    }
+    response = self._send_and_receive(message)
+    return response.data[0]['port']
+
+  def get_numbers(self, imsi=None):
+    """Get just the numbers (exten) associated with an IMSI.
+
+    If imsi is None, get all dialdata.
+    """
+    fields = ['exten']
+    qualifiers = {}
+    if imsi:
+      qualifiers['dial'] = imsi
+    message = {
+      'command': 'dialdata_table',
+      'action': 'read',
+      'match': qualifiers,
+      'fields': fields,
+    }
+    response = self._send_and_receive(message)
+    return [d['exten'] for d in response.data]
+
+  def add_number(self, imsi, number):
+    """Associate a new number with an IMSI.
+
+    If the number's already been added, do nothing.
+    """
+    if number in self.get_numbers(imsi):
+      return False
+    message = {
+      'command': 'dialdata_table',
+      'action': 'create',
+      'fields': {
+        'dial': str(imsi),
+        'exten': str(number),
+      }
+    }
+    return self._send_and_receive(message)
+
+  def delete_number(self, imsi, number):
+    """De-associate a number with an IMSI."""
+    # First see if the number is attached to the subscriber.
+    if number not in self.get_numbers(imsi):
+      raise ValueError('number %s not attached to IMSI %s' % (number, imsi))
+    message = {
+      'command': 'dialdata_table',
+      'action': 'delete',
+      'match': {
+        'dial': str(imsi),
+        'exten': str(number),
+      }
+    }
+    result = self._send_and_receive(message)
+    return result
+
+  def create_subscriber(self, imsi, msisdn, ipaddr, port, ki=''):
     """Add a subscriber.
+
+    Technically we don't need every subscriber to have a number, but we'll just
+    enforce this by convention.  We will also set the convention that a
+    subscriber's name === their imsi.  Some things in NM are keyed on 'name'
+    however, so we have to use both when making queries and updates.
 
     If the 'ki' argument is given, OpenBTS will use full auth.  Otherwise the
     system will use cache auth.  The values of IMSI, MSISDN and ki will all
     be cast to strings before the message is sent.
 
     Args:
-      name: name of the subscriber
       imsi: IMSI of the subscriber
-      msisdn: MSISDN of the subscriber
-      ip: IP of the subscriber
-      port: port of the subscriber
+      msisdn: MSISDN of the subscriber (their phone number)
+      ipaddr: IP of the subscriber's OpenBTS instance
+      port: port of the subscriber's OpenBTS instance
       ki: authentication key of the subscriber
 
     Returns:
@@ -103,15 +204,16 @@ class SIPAuthServe(BaseComponent):
       'command': 'subscribers',
       'action': 'create',
       'fields': {
-        'name': name,
         'imsi': str(imsi),
         'msisdn': str(msisdn),
         'ipaddr': str(ipaddr),
         'port': str(port),
+        'name': str(imsi),
         'ki': str(ki)
       }
     }
     response = self._send_and_receive(message)
+    self.add_number(imsi, msisdn)
     return response
 
   def delete_subscriber(self, imsi):
@@ -133,164 +235,34 @@ class SIPAuthServe(BaseComponent):
     response = self._send_and_receive(message)
     return response
 
-  def update_subscriber(self, new_name, new_msisdn, new_ipaddr, new_port, imsi):
-    """Update a subscriber by IMSI.
-
-    Args:
-      imsi: the IMSI of the to-be-updated subscriber
-      new_name: the new name value
-      new_msisdn: the new number
-      new_ipaddr: the new ipaddr
-      new_port: the new port
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError: if a field is missing or request failed
-      InvalidResponseError: if the operation failed
-    """
-
+  def update_ipaddr(self, imsi, new_ipaddr):
+    """Updates a subscriber's IP address."""
     message = {
-      'command': 'subscribers',
+      'command': 'sip_buddies',
       'action': 'update',
       'match': {
-          'imsi': imsi
+        'name': imsi
+      },
+      'fields': {
+        'ipaddr': new_ipaddr
+      }
+    }
+    return self._send_and_receive(message)
+
+  def update_port(self, imsi, new_port):
+    """Updates a subscriber's port."""
+    message = {
+      'command': 'sip_buddies',
+      'action': 'update',
+      'match': {
+        'name': imsi
        },
       'fields': {
-          'name': new_name,
-          'msisdn': new_msisdn,
-          'ipaddr': new_ipaddr,
-          'port': new_port
+        'port': new_port,
        }
     }
     return self._send_and_receive(message)
 
-  def read_dialdata(self, fields, qualifier):
-    """Reads a dial_data row entry.
-
-    Args:
-      fields: A list of column names in dialdata_table, if None return all
-      qualifier: A dictionary of qualifiers
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError if no qualified entry exists
-    """
-
-    return self._read_subscriber_registry('dialdata_table', fields, qualifier)
-
-
-  def read_sip_buddies(self, fields, qualifier):
-    """Reads a sip_buddies row entry.
-
-    Args:
-      fields: A list of column names in sip_buddies, if None return all
-      qualifier: A dictionary of qualifiers
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError if no qualified entry exists
-    """
-    return self._read_subscriber_registry('sip_buddies', fields, qualifier)
-
-  def update_dialdata(self, fields, qualifier):
-    """Updates a dial_data row entry.
-
-    Args:
-      fields: A dict of values to update
-      qualifier: A dictionary of qualifiers
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError if no qualified entry exists
-    """
-
-    return self._update_subscriber_registry('dialdata_table', fields, qualifier)
-
-  def update_sip_buddies(self, fields, qualifier):
-    """Updates a sip_buddies row entry.
-
-    Args:
-      fields: A dict of values to update
-      qualifier: A dictionary of qualifiers
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError if no qualified entry exists
-    """
-    return self._update_subscriber_registry('sip_buddies', fields, qualifier)
-
-  def _update_subscriber_registry(self, table_name, fields, qualifier):
-    """Reads an entry from one of the subscriber registry tables.
-
-    Args:
-      table_name: the name of the subscriber registry table
-      fields: A dictionary of values of update
-      qualifier: A dictionary of qualifiers
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError if no qualified entry exists
-    """
-
-    # this is the only check we really need to do on the client
-    # node manager will handle the rest
-    if table_name not in ('sip_buddies', 'dialdata_table', 'RRLP'):
-        raise InvalidRequestError('Invalid SR table name')
-    if not isinstance(fields, dict) or not isinstance(qualifier, dict):
-        raise InvalidRequestError('Invalid argument passed')
-
-    message = {
-      'command': table_name,
-      'action': 'update',
-      'match': qualifier,
-      'fields': fields
-    }
-
-    return self._send_and_receive(message)
-
-  def _read_subscriber_registry(self, table_name, fields, qualifier):
-    """Reads an entry from one of the subscriber registry tables.
-
-    Args:
-      table_name: the name of the subscriber registry table
-      fields: A list of column names in the table, if None return all
-      qualifier: A dictionary of qualifiers
-
-    Returns:
-      Response instance
-
-    Raises:
-      InvalidRequestError if no qualified entry exists
-    """
-
-    # this is the only check we really need to do on the client
-    # node manager will handle the rest
-    if table_name not in ('sip_buddies', 'dialdata_table'):
-        raise InvalidRequestError('Invalid SR table name')
-    if (fields is not None and not isinstance(fields, list)) \
-            or not isinstance(qualifier, dict):
-        raise InvalidRequestError('Invalid argument passed')
-
-    message = {
-      'command': table_name,
-      'action': 'read',
-      'match': qualifier,
-      'fields': fields,
-    }
-
-    return self._send_and_receive(message)
 
 class SMQueue(BaseComponent):
   """Manages communication to the SMQueue service.
