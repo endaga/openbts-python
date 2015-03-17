@@ -75,7 +75,7 @@ MIT
 run unit tests with `nose`:
 
 ```shell
-$ nosetests --with-coverage --cover-package=openbts
+$ nosetests openbts --with-coverage --cover-package=openbts
 ```
 
 We have quite a few similar unit tests between components.
@@ -90,7 +90,8 @@ parameters, so run it with caution.  Or, better yet, run it against a system
 not in production.
 
 ```shell
-$ nosetests openbts.tests.integration_tests
+$ nosetests integration_tests
+$ nosetests integration_tests:SIPAuthServe
 ```
 
 
