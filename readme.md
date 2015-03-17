@@ -50,7 +50,7 @@ print response.code
 # 200
 ```
 
-see additional examples in `openbts/tests/integration_tests.py`
+see additional examples in `integration_tests.py`
 
 
 ### license
@@ -92,6 +92,7 @@ not in production.
 ```shell
 $ nosetests integration_tests
 $ nosetests integration_tests:SIPAuthServe
+$ nosetests integration_tests:SIPAuthServe.test_get_all_subscribers
 ```
 
 
