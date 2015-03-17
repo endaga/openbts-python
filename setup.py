@@ -11,7 +11,7 @@ with open('requirements.txt') as f:
 with open('readme.md') as f:
   readme = f.read()
 
-version = '0.0.9'
+version = '0.0.10'
 
 setup(
     name='openbts',
@@ -22,7 +22,7 @@ setup(
     download_url=('https://github.com/endaga/openbts-python/tarball/%s' %
                   version),
     author='Matt Ball',
-    author_email='matt.ball.2@gmail.com',
+    author_email='matt@endaga.com',
     license='MIT',
     packages=['openbts'],
     install_requires=required_libs,
