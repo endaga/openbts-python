@@ -178,7 +178,7 @@ class SIPAuthServeTest(unittest.TestCase):
 
   def test_delete_last_number(self):
     with self.assertRaises(ValueError):
-      self.conn.delete_number(self.sub_a_imsi, '5556789')
+      self.conn.delete_number(self.sub_a_imsi, '5551234')
 
   def test_delete_single_number(self):
     self.conn.add_number(self.sub_a_imsi, '5557744')

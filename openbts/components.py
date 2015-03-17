@@ -189,12 +189,16 @@ class SIPAuthServe(BaseComponent):
   def delete_number(self, imsi, number):
     """De-associate a number with an IMSI."""
     # First see if the number is attached to the subscriber.
-    if number not in self.get_numbers(imsi):
+    numbers = self.get_numbers(imsi)
+    if number not in numbers:
       raise ValueError('number %s not attached to IMSI %s' % (number, imsi))
+    # Check if this is the only associated number.
+    if len(numbers) == 1:
+      raise ValueError('cannot delete number %s as it is the only number'
+                       ' associated with IMSI %s' % (number, imsi))
     # See if this number is the caller ID.  If it is, promote another number
     # to be caller ID.
     if number == self.get_caller_id(imsi):
-      numbers = self.get_numbers(imsi)
       numbers.remove(number)
       new_caller_id = numbers[-1]
       self.update_caller_id(imsi, new_caller_id)
