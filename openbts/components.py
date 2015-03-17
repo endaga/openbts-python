@@ -264,7 +264,17 @@ class SIPAuthServe(BaseComponent):
     return self._send_and_receive(message)
 
   def get_imsi_from_number(self, number):
-    """Translate a number into an IMSI."""
+    """Translate a number into an IMSI.
+
+    Args:
+      number: a phone number
+
+    Returns:
+      the matching IMSI
+
+    Raises:
+      InvalidRequestError if the number does not exist
+    """
     qualifiers = {
       'exten': number
     }
