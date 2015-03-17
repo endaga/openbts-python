@@ -89,9 +89,9 @@ class SIPAuthServeTest(unittest.TestCase):
   def setUp(self):
     self.conn = openbts.components.SIPAuthServe()
     self.sub_a_imsi = 'IMSI000123'
+    self.sub_b_imsi = 'IMSI000789'
     self.conn.create_subscriber(self.sub_a_imsi, '5551234', '127.0.0.1',
                                 '8888')
-    self.sub_b_imsi = 'IMSI000789'
     self.conn.create_subscriber(self.sub_b_imsi, '5556789', '123.234.123.234',
                                 '8000', ki=6789)
 
@@ -192,3 +192,23 @@ class SIPAuthServeTest(unittest.TestCase):
   def test_get_imsi_from_nonexistent_number(self):
     with self.assertRaises(openbts.exceptions.InvalidRequestError):
       self.conn.get_imsi_from_number('5558876')
+
+  def test_get_account_balance(self):
+    result = self.conn.get_account_balance(self.sub_a_imsi)
+    self.assertEqual('0', result)
+
+  def test_get_account_balance_from_nonexistent_imsi(self):
+    with self.assertRaises(openbts.exceptions.InvalidRequestError):
+      self.conn.get_account_balance('IMSI000443322')
+
+  def test_update_account_balance(self):
+    self.conn.update_account_balance(self.sub_a_imsi, '1000')
+    result = self.conn.get_account_balance(self.sub_a_imsi)
+    self.assertEqual('1000', result)
+
+  def test_update_account_balance_invalid_type(self):
+    """Account balances must be integer values."""
+    with self.assertRaises(TypeError):
+      self.conn.update_account_balance(self.sub_a_imsi, 999)
+    with self.assertRaises(TypeError):
+      self.conn.update_account_balance(self.sub_a_imsi, 9.99)

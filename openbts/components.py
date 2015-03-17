@@ -202,7 +202,7 @@ class SIPAuthServe(BaseComponent):
 
     Returns:
       Response instance
-    
+
     Raises:
       ValueError if the IMSI is already registered
     """
@@ -297,6 +297,45 @@ class SIPAuthServe(BaseComponent):
     }
     result = self._send_and_receive(message)
     return result.data[0]['dial']
+
+  def get_account_balance(self, imsi):
+    """Get the account balance of a subscriber."""
+    fields = ['account_balance']
+    qualifiers = {
+      'name': imsi
+    }
+    message = {
+      'command': 'sip_buddies',
+      'action': 'read',
+      'match': qualifiers,
+      'fields': fields,
+    }
+    response = self._send_and_receive(message)
+    return response.data[0]['account_balance']
+
+  def update_account_balance(self, imsi, new_account_balance):
+    """Updates a subscriber's account_balance.
+
+    Args:
+      imsi: the subscriber-of-interest
+      new_account_balance: value of the new balance (str)
+
+    Raises:
+      TypeError if the new balance is not a string
+    """
+    if not isinstance(new_account_balance, str):
+      raise TypeError
+    message = {
+      'command': 'sip_buddies',
+      'action': 'update',
+      'match': {
+        'name': imsi
+      },
+      'fields': {
+        'account_balance': new_account_balance
+      }
+    }
+    return self._send_and_receive(message)
 
 
 class SMQueue(BaseComponent):
