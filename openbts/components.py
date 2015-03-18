@@ -98,9 +98,9 @@ class SIPAuthServe(BaseComponent):
       return []
 
     # We get back every field in the SR, most of which are not useful.  We will
-    # simplify each subscriber dict to show just a few ports.  And we will
-    # attach additional info on associated numbers, account balance and caller
-    # ID.
+    # simplify each subscriber dict to show just a few attributes.  And we'll
+    # attach additional info on associated numbers, account balance and the
+    # caller ID.
     simplified_subscribers = []
     for subscriber in subscribers:
       simplified_subscriber = {
