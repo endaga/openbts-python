@@ -86,25 +86,33 @@ class SIPAuthServe(BaseComponent):
     qualifiers = {}
     if imsi:
       qualifiers['name'] = imsi
-    fields = ['name', 'ipaddr', 'port']
     message = {
       'command': 'sip_buddies',
       'action': 'read',
       'match': qualifiers,
-      'fields': fields,
     }
     try:
       response = self._send_and_receive(message)
       subscribers = response.data
     except InvalidRequestError:
-      subscribers = []
-    # Now attach the associated numbers, account balance and caller_id info.
+      return []
+
+    # We get back every field in the SR, most of which are not useful.  We will
+    # simplify each subscriber dict to show just a few ports.  And we will
+    # attach additional info on associated numbers, account balance and caller
+    # ID.
+    simplified_subscribers = []
     for subscriber in subscribers:
-      subscriber['numbers'] = self.get_numbers(subscriber['name'])
-      subscriber['account_balance'] = self.get_account_balance(
-          subscriber['name'])
-      subscriber['caller_id'] = self.get_caller_id(subscriber['name'])
-    return subscribers
+      simplified_subscriber = {
+        'name': subscriber['name'],
+        'ipaddr': subscriber['ipaddr'],
+        'port': subscriber['port'],
+        'numbers': self.get_numbers(subscriber['name']),
+        'account_balance': self.get_account_balance(subscriber['name']),
+        'caller_id': self.get_caller_id(subscriber['name']),
+      }
+      simplified_subscribers.append(simplified_subscriber)
+    return simplified_subscribers
 
   def get_ipaddr(self, imsi):
     """Get the IP address of a subscriber."""
@@ -260,6 +268,10 @@ class SIPAuthServe(BaseComponent):
     }
     response = self._send_and_receive(message)
     self.add_number(imsi, msisdn)
+    # In a recent upgrade, the IP and port are not being set correctly by this
+    # message, so we will set them explicitly.
+    self.update_ipaddr(imsi, str(ipaddr))
+    self.update_port(imsi, str(port))
     return response
 
   def delete_subscriber(self, imsi):
