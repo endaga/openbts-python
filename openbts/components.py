@@ -222,6 +222,9 @@ class SIPAuthServe(BaseComponent):
     subscriber's name === their imsi.  Some things in NM are keyed on 'name'
     however, so we have to use both when making queries and updates.
 
+    In calling this method we let NodeManager automatically set the sip_buddies
+    callerid field to equal the providied msisdn.
+
     If the 'ki' argument is given, OpenBTS will use full auth.  Otherwise the
     system will use cache auth.  The values of IMSI, MSISDN and ki will all
     be cast to strings before the message is sent.
