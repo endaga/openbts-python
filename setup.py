@@ -11,7 +11,7 @@ with open('requirements.txt') as f:
 with open('readme.md') as f:
   readme = f.read()
 
-version = '0.0.12'
+version = '0.0.13'
 
 setup(
     name='openbts',

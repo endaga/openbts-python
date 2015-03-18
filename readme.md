@@ -58,6 +58,7 @@ MIT
 
 
 ### releases
+* 0.0.13 - fixes `get_subscriber` and `create_subscriber` for the latest NM
 * 0.0.12 - correctly handles `caller_id` in get / update / delete operations
 * 0.0.11 - `get_subscribers` returns `account_balance` info for each subscriber
 * 0.0.10 - adds read and update operations on subscriber `account_balance`
