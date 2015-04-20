@@ -3,10 +3,6 @@ openbts-python package definition
 """
 from setuptools import setup
 
-# pull all the requirements from the pip-freezed file
-with open('requirements.txt') as f:
-  required_libs = f.readlines()
-
 # load the readme
 with open('readme.md') as f:
   readme = f.read()
@@ -25,6 +21,6 @@ setup(
     author_email='matt@endaga.com',
     license='MIT',
     packages=['openbts'],
-    install_requires=required_libs,
+    install_requires=["enum34==1.0.4", "pyzmq==14.5.0"],
     zip_safe=False
 )
