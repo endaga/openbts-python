@@ -165,30 +165,50 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
           'exten': '5551234',
           'ipaddr': '127.0.0.1',
            'port': '5555'
+        }, {
+          'name': 'subscriber_b',
+          'exten': '5559876',
+          'ipaddr': '127.0.0.1',
+           'port': '5555'
+        }]
+      }),
+      json.dumps({'code': 200, 'data': [{'exten': '5551234'}]}),
+      json.dumps({'code': 200, 'data': [{'account_balance': '3000'}]}),
+      json.dumps({'code': 200, 'data': [{'callerid': '5551234'}]}),
+      # Return values for a second mocked subscriber.
+      json.dumps({'code': 200, 'data': [{'exten': '5559876'}]}),
+      json.dumps({'code': 200, 'data': [{'account_balance': '100000'}]}),
+      json.dumps({'code': 200, 'data': [{'callerid': '5559876'}]}),
+    ]
+    response = self.sipauthserve_connection.get_subscribers()
+    self.assertTrue(self.sipauthserve_connection.socket.send.called)
+    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
+    self.assertEqual(2, len(response))
+    self.assertEqual('subscriber_a', response[0]['name'])
+    self.assertEqual('100000', response[1]['account_balance'])
+
+  def test_get_a_subscriber(self):
+    """Requesting a subscriber should send a zmq message and get a response."""
+    self.sipauthserve_connection.socket.recv.side_effect = [
+      json.dumps({
+        'code': 200,
+        'data': [{
+          'name': 'subscriber_a',
+          'exten': '5551234',
+          'ipaddr': '127.0.0.1',
+           'port': '5555'
         }]
       }),
       json.dumps({'code': 200, 'data': [{'exten': '5551234'}]}),
       json.dumps({'code': 200, 'data': [{'account_balance': '3000'}]}),
       json.dumps({'code': 200, 'data': [{'callerid': '5551234'}]}),
     ]
-    response = self.sipauthserve_connection.get_subscribers()
+    response = self.sipauthserve_connection.get_subscribers(imsi='IMSI000000')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
     self.assertEqual(1, len(response))
     self.assertEqual('subscriber_a', response[0]['name'])
     self.assertEqual('3000', response[0]['account_balance'])
-
-  def test_get_a_subscriber(self):
-    """Requesting a subscriber should send a zmq message and get a response."""
-    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
-      'code': 200,
-      'data': [
-        {'name': 'subscriber_filered', 'exten': '5551234'},
-      ]
-    })
-    self.sipauthserve_connection.get_subscribers(imsi='IMSI000000')
-    self.assertTrue(self.sipauthserve_connection.socket.send.called)
-    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
 
   def test_create_subscriber_with_ki(self):
     """Creating a subscriber should send a zmq message and get a response."""
