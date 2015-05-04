@@ -72,16 +72,14 @@ class SIPAuthServe(BaseComponent):
       imsi: the IMSI to search by
 
     Returns:
-      an array of subscriber dicts, themselves of the form: {
+      an empty array if no subscribers match the query, or an array of
+      subscriber dicts, themselves of the form: {
         'name': 'IMSI000123',
         'ip': '127.0.0.1',
         'port': '8888',
         'numbers': ['5551234', '5556789'],
         'account_balance': '1000',
       }
-
-    Raises:
-      InvalidRequestError if no qualified entry exists
     """
     qualifiers = {}
     if imsi:

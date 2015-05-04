@@ -263,16 +263,14 @@ class SIPAuthServeNonNominalSubscriberTestCase(unittest.TestCase):
     })
 
   def test_get_nonexistent_subscribers(self):
-    """Requesting a nonexistent subscriber using a filter should
-       raise an exception
-    """
+    """Requesting a nonexistent subscriber returns an empty array."""
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
       'code': 404,
       'data': 'not found'
     })
-    with self.assertRaises(InvalidRequestError):
-        response = self.sipauthserve_connection.get_subscribers(
-            imsi='non-existent')
+    response = self.sipauthserve_connection.get_subscribers(
+        imsi='non-existent')
+    self.assertEqual([], response)
 
   def test_delete_subscriber_when_sqlite_unavailable(self):
     """Testing the subscriber deletion case when OpenBTS reports sqlite is unavailble"""
