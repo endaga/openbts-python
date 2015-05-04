@@ -7,7 +7,7 @@ from setuptools import setup
 with open('readme.md') as f:
   readme = f.read()
 
-version = '0.0.14'
+version = '0.0.15'
 
 setup(
     name='openbts',

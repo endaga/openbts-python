@@ -5,6 +5,7 @@ import unittest
 
 import mock
 
+import openbts
 from openbts.components import SIPAuthServe
 from openbts.exceptions import InvalidRequestError
 from openbts.codes import SuccessCode
@@ -301,3 +302,74 @@ class SIPAuthServeOffNominalSubscriberTestCase(unittest.TestCase):
       })
     with self.assertRaises(InvalidRequestError):
         self.sipauthserve_connection.delete_subscriber(310150123456789)
+
+
+class GPRSUsage(unittest.TestCase):
+  """Getting GPRS usage info for a subscriber by invoking OpenBTSCLI."""
+
+  @classmethod
+  def setUpClass(cls):
+    """We use envoy to call the OpenBTSCLI so we'll monkeypatch that module."""
+    cls.original_envoy = openbts.components.envoy
+    cls.mock_envoy = mock.Mock()
+    cls.sipauthserve = SIPAuthServe()
+
+  @classmethod
+  def tearDownClass(cls):
+    """Repair the monkeypatch."""
+    openbts.components.envoy = cls.original_envoy
+
+  def test_gprs_disabled(self):
+    """Envoy gets an empty reply when GPRS is disabled.
+
+    This also occurs if phones are off and do not have IPs assigned.
+    """
+    self.mock_envoy.return_value = '\n'
+    response = self.sipauthserve.get_gprs_usage()
+    self.assertEqual({}, response)
+    response = self.sipauthserve.get_gprs_usage(imsi='IMSI000123')
+    self.assertEqual(None, response)
+
+  def test_all_imsis(self):
+    """We can get all available GPRS connection data."""
+    # The command 'gprs list' returns a big string when IPs are assigned.
+    with open('fixtures/openbts_cli_gprs_list_output.txt') as output:
+        self.mock_envoy.return_value = output.read()
+    expected_usage = {
+        'IMSI901550000000022': {
+            'ipaddr': '192.168.99.4',
+            'bytes_down': 139441,
+            'bytes_up': 53495,
+        },
+        'IMSI901550000000505': {
+            'ipaddr': '192.168.99.1',
+            'bytes_down': 41016,
+            'bytes_up': 21254,
+        },
+        'IMSI901550000000504': {
+            'ipaddr': '192.168.99.2',
+            'bytes_down': 77,
+            'bytes_up': 111,
+        },
+        'IMSI901550000000015': {
+            'ipaddr': '192.168.99.3',
+            'bytes_down': 77,
+            'bytes_up': 111,
+        },
+    }
+    self.assertEqual(expected_usage, self.sipauthserve.get_gprs_usage())
+
+  def test_specific_imsi(self):
+    """We can get data for a specific IMSI."""
+    with open('fixtures/openbts_cli_gprs_list_output.txt') as output:
+        self.mock_envoy.return_value = output.read()
+    target_imsi = 'IMSI901550000000022'
+    expected_usage = {
+        target_imsi: {
+            'ipaddr': '192.168.99.4',
+            'bytes_down': 139441,
+            'bytes_up': 53495,
+        },
+    }
+    self.assertEqual(expected_usage,
+                     self.sipauthserve.get_gprs_usage(imsi=target_imsi))

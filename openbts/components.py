@@ -2,6 +2,8 @@
 manages components in the OpenBTS application suite
 """
 
+import envoy
+
 from openbts.core import BaseComponent
 from openbts.exceptions import InvalidRequestError
 
