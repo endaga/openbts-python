@@ -58,6 +58,7 @@ MIT
 
 
 ### releases
+* 0.0.14 - `get_numbers` returns an empty list instead of raising if no number is found for an IMSI
 * 0.0.13 - fixes `get_subscriber` and `create_subscriber` for the latest NM
 * 0.0.12 - correctly handles `caller_id` in get / update / delete operations
 * 0.0.11 - `get_subscribers` returns `account_balance` info for each subscriber
@@ -79,9 +80,10 @@ MIT
 
 
 ### testing
-run unit tests with `nose`:
+run unit tests with `nose` after installing the required modules:
 
 ```shell
+$ pip install -r requirements.txt
 $ nosetests openbts --with-coverage --cover-package=openbts
 ```
 

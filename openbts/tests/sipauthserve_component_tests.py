@@ -1,6 +1,4 @@
-"""openbts.tests.sipauthserve_component_tests
-tests for the SIPAuthServe component
-"""
+"""Tests for the SIPAuthServe component."""
 
 import json
 import unittest
@@ -54,8 +52,8 @@ class SIPAuthServeNominalConfigTestCase(unittest.TestCase):
 
   def test_update_config(self):
     """Updating a key should send a message over zmq and get a response."""
-    response = self.sipauthserve_connection.update_config('sample-key',
-                                                     'sample-value')
+    response = self.sipauthserve_connection.update_config(
+        'sample-key', 'sample-value')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     expected_message = json.dumps({
       'command': 'config',
@@ -156,81 +154,100 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     })
 
   def test_get_all_subscribers(self):
-    """Requesting all subscribers should send a message over zmq and get a
-    response.
-    """
-    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
-      'code': 200,
-      'data': [
-        {'name': 'subscriber_a', 'exten': '5551234'},
-        {'name': 'subscriber_b', 'exten': '5551456'}
-      ]
-    })
-    self.sipauthserve_connection.get_subscribers()
+    """Should send a message over zmq and get a response."""
+    # Using 'side_effect' to mock multiple return values from the socket.  This
+    # method makes quite a few requests.
+    self.sipauthserve_connection.socket.recv.side_effect = [
+      json.dumps({
+        'code': 200,
+        'data': [{
+          'name': 'subscriber_a',
+          'exten': '5551234',
+          'ipaddr': '127.0.0.1',
+           'port': '5555'
+        }, {
+          'name': 'subscriber_b',
+          'exten': '5559876',
+          'ipaddr': '127.0.0.1',
+           'port': '5555'
+        }]
+      }),
+      json.dumps({'code': 200, 'data': [{'exten': '5551234'}]}),
+      json.dumps({'code': 200, 'data': [{'account_balance': '3000'}]}),
+      json.dumps({'code': 200, 'data': [{'callerid': '5551234'}]}),
+      # Return values for a second mocked subscriber.
+      json.dumps({'code': 200, 'data': [{'exten': '5559876'}]}),
+      json.dumps({'code': 200, 'data': [{'account_balance': '100000'}]}),
+      json.dumps({'code': 200, 'data': [{'callerid': '5559876'}]}),
+    ]
+    response = self.sipauthserve_connection.get_subscribers()
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
+    self.assertEqual(2, len(response))
+    self.assertEqual('subscriber_a', response[0]['name'])
+    self.assertEqual('100000', response[1]['account_balance'])
 
   def test_get_a_subscriber(self):
-    """Requesting a subscriber using a filter should send a message over
-    zmq and get a response.
-    """
-    self.sipauthserve_connection.socket.recv.return_value = json.dumps({
-      'code': 200,
-      'data': [
-        {'name': 'subscriber_filered', 'exten': '5551234'},
-      ]
-    })
-    self.sipauthserve_connection.get_subscribers(imsi='IMSI000000')
+    """Requesting a subscriber should send a zmq message and get a response."""
+    self.sipauthserve_connection.socket.recv.side_effect = [
+      json.dumps({
+        'code': 200,
+        'data': [{
+          'name': 'subscriber_a',
+          'exten': '5551234',
+          'ipaddr': '127.0.0.1',
+           'port': '5555'
+        }]
+      }),
+      json.dumps({'code': 200, 'data': [{'exten': '5551234'}]}),
+      json.dumps({'code': 200, 'data': [{'account_balance': '3000'}]}),
+      json.dumps({'code': 200, 'data': [{'callerid': '5551234'}]}),
+    ]
+    response = self.sipauthserve_connection.get_subscribers(imsi='IMSI000000')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
+    self.assertEqual(1, len(response))
+    self.assertEqual('subscriber_a', response[0]['name'])
+    self.assertEqual('3000', response[0]['account_balance'])
 
   def test_create_subscriber_with_ki(self):
-    """Creating a subscriber with a specficied ki should send a message over
-    zmq and get a response.
-    """
-    response = self.sipauthserve_connection.create_subscriber(
+    """Creating a subscriber should send a zmq message and get a response."""
+    self.sipauthserve_connection.socket.recv.side_effect = [
+      # First, get_subs should reply with 'not found' since this sub is new.
+      json.dumps({'code': 404}),
+      # The actual create sub message should succeed.
+      json.dumps({'code': 200}),
+      # The add_number request triggers a number lookup (should fail) and then
+      # an actual "dialdata_table create" message which should succeed.
+      json.dumps({'code': 404}),
+      json.dumps({'code': 200}),
+      # Then the ipaddr and port updates should succeed.
+      json.dumps({'code': 200}),
+      json.dumps({'code': 200}),
+    ]
+    self.sipauthserve_connection.create_subscriber(
         310150123456789, 123456789, '127.0.0.1', '1234', ki='abc')
-    self.assertTrue(self.sipauthserve_connection.socket.send.called)
-    # TODO(matt): not the best test as the socket should be called twice..once
-    #             for subscribers and once for dialdata..but this is also
-    #             covered in the integration testing..
-    expected_message = json.dumps({
-      "action": "create",
-      "fields": {
-        "exten": "123456789",
-        "dial": "310150123456789"
-      },
-      "command": "dialdata_table"
-    })
-    self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
-                     (expected_message,))
-    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_create_subscriber_sans_ki(self):
-    """Creating a subscriber without a specficied ki should still send a
-    message over zmq and get a response.
-    """
+    """Creating a subscriber without a specficied ki uses zmq."""
+    self.sipauthserve_connection.socket.recv.side_effect = [
+      # First, get_subs should reply with 'not found' since this sub is new.
+      json.dumps({'code': 404}),
+      # The actual create sub message should succeed.
+      json.dumps({'code': 200}),
+      # The add_number request triggers a number lookup (should fail) and then
+      # an actual "dialdata_table create" message which should succeed.
+      json.dumps({'code': 404}),
+      json.dumps({'code': 200}),
+      # Then the ipaddr and port updates should succeed.
+      json.dumps({'code': 200}),
+      json.dumps({'code': 200}),
+    ]
     response = self.sipauthserve_connection.create_subscriber(
         310150123456789, 123456789, '127.0.0.1', '1234')
-    self.assertTrue(self.sipauthserve_connection.socket.send.called)
-    expected_message = json.dumps({
-      "action": "create",
-      "fields": {
-        "exten": "123456789",
-        "dial": "310150123456789"
-      },
-      "command": "dialdata_table"
-    })
-    self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
-                     (expected_message,))
-    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_delete_subscriber_by_imsi(self):
-    """Deleting a subscriber by passing an IMSI should send a message over zmq
-    and get a response.
-    """
+    """Deleting a subscriber by IMSI should use zmq."""
     response = self.sipauthserve_connection.delete_subscriber(310150123456789)
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     expected_message = json.dumps({
@@ -246,10 +263,11 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     self.assertEqual(response.code, SuccessCode.NoContent)
 
 
-class SIPAuthServeNonNominalSubscriberTestCase(unittest.TestCase):
+class SIPAuthServeOffNominalSubscriberTestCase(unittest.TestCase):
   """Testing the components.SIPAuthServe class.
 
-  Applying nonnominal uses of the 'subscribers' command and 'sipauthserve' target.
+  Applying off-nominal uses of the 'subscribers' command and 'sipauthserve'
+  target.
   """
 
   def setUp(self):
@@ -263,19 +281,17 @@ class SIPAuthServeNonNominalSubscriberTestCase(unittest.TestCase):
     })
 
   def test_get_nonexistent_subscribers(self):
-    """Requesting a nonexistent subscriber using a filter should
-       raise an exception
-    """
+    """Requesting a nonexistent subscriber returns an empty array."""
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
       'code': 404,
       'data': 'not found'
     })
-    with self.assertRaises(InvalidRequestError):
-        response = self.sipauthserve_connection.get_subscribers(
-            imsi='non-existent')
+    response = self.sipauthserve_connection.get_subscribers(
+        imsi='non-existent')
+    self.assertEqual([], response)
 
   def test_delete_subscriber_when_sqlite_unavailable(self):
-    """Testing the subscriber deletion case when OpenBTS reports sqlite is unavailble"""
+    """Invalid request when sqlite is unavailble."""
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
       'code': 503,
       'data': {
@@ -284,4 +300,4 @@ class SIPAuthServeNonNominalSubscriberTestCase(unittest.TestCase):
         }
       })
     with self.assertRaises(InvalidRequestError):
-        response = self.sipauthserve_connection.delete_subscriber(310150123456789)
+        self.sipauthserve_connection.delete_subscriber(310150123456789)
