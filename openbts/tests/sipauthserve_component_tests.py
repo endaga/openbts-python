@@ -212,42 +212,39 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
 
   def test_create_subscriber_with_ki(self):
     """Creating a subscriber should send a zmq message and get a response."""
-    response = self.sipauthserve_connection.create_subscriber(
+    self.sipauthserve_connection.socket.recv.side_effect = [
+      # First, get_subs should reply with 'not found' since this sub is new.
+      json.dumps({'code': 404}),
+      # The actual create sub message should succeed.
+      json.dumps({'code': 200}),
+      # The add_number request triggers a number lookup (should fail) and then
+      # an actual "dialdata_table create" message which should succeed.
+      json.dumps({'code': 404}),
+      json.dumps({'code': 200}),
+      # Then the ipaddr and port updates should succeed.
+      json.dumps({'code': 200}),
+      json.dumps({'code': 200}),
+    ]
+    self.sipauthserve_connection.create_subscriber(
         310150123456789, 123456789, '127.0.0.1', '1234', ki='abc')
-    self.assertTrue(self.sipauthserve_connection.socket.send.called)
-    # TODO(matt): not the best test as the socket should be called twice..once
-    #             for subscribers and once for dialdata..but this is also
-    #             covered in the integration testing..
-    expected_message = json.dumps({
-      "action": "create",
-      "fields": {
-        "exten": "123456789",
-        "dial": "310150123456789"
-      },
-      "command": "dialdata_table"
-    })
-    self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
-                     (expected_message,))
-    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_create_subscriber_sans_ki(self):
     """Creating a subscriber without a specficied ki uses zmq."""
+    self.sipauthserve_connection.socket.recv.side_effect = [
+      # First, get_subs should reply with 'not found' since this sub is new.
+      json.dumps({'code': 404}),
+      # The actual create sub message should succeed.
+      json.dumps({'code': 200}),
+      # The add_number request triggers a number lookup (should fail) and then
+      # an actual "dialdata_table create" message which should succeed.
+      json.dumps({'code': 404}),
+      json.dumps({'code': 200}),
+      # Then the ipaddr and port updates should succeed.
+      json.dumps({'code': 200}),
+      json.dumps({'code': 200}),
+    ]
     response = self.sipauthserve_connection.create_subscriber(
         310150123456789, 123456789, '127.0.0.1', '1234')
-    self.assertTrue(self.sipauthserve_connection.socket.send.called)
-    expected_message = json.dumps({
-      "action": "create",
-      "fields": {
-        "exten": "123456789",
-        "dial": "310150123456789"
-      },
-      "command": "dialdata_table"
-    })
-    self.assertEqual(self.sipauthserve_connection.socket.send.call_args[0],
-                     (expected_message,))
-    self.assertTrue(self.sipauthserve_connection.socket.recv.called)
-    self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_delete_subscriber_by_imsi(self):
     """Deleting a subscriber by IMSI should use zmq."""

@@ -172,8 +172,11 @@ class SIPAuthServe(BaseComponent):
       'match': qualifiers,
       'fields': fields,
     }
-    response = self._send_and_receive(message)
-    return [d['exten'] for d in response.data]
+    try:
+      response = self._send_and_receive(message)
+      return [d['exten'] for d in response.data]
+    except InvalidRequestError:
+      return []
 
   def add_number(self, imsi, number):
     """Associate a new number with an IMSI.
