@@ -80,9 +80,10 @@ MIT
 
 
 ### testing
-run unit tests with `nose`:
+run unit tests with `nose` after installing the required modules:
 
 ```shell
+$ pip install -r requirements.txt
 $ nosetests openbts --with-coverage --cover-package=openbts
 ```
 
