@@ -1,6 +1,4 @@
-"""openbts.tests.sipauthserve_component_tests
-tests for the SIPAuthServe component
-"""
+"""Tests for the SIPAuthServe component."""
 
 import json
 import unittest
@@ -54,8 +52,8 @@ class SIPAuthServeNominalConfigTestCase(unittest.TestCase):
 
   def test_update_config(self):
     """Updating a key should send a message over zmq and get a response."""
-    response = self.sipauthserve_connection.update_config('sample-key',
-                                                     'sample-value')
+    response = self.sipauthserve_connection.update_config(
+        'sample-key', 'sample-value')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     expected_message = json.dumps({
       'command': 'config',
@@ -156,9 +154,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     })
 
   def test_get_all_subscribers(self):
-    """Requesting all subscribers should send a message over zmq and get a
-    response.
-    """
+    """Should send a message over zmq and get a response."""
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
       'code': 200,
       'data': [
@@ -171,9 +167,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
 
   def test_get_a_subscriber(self):
-    """Requesting a subscriber using a filter should send a message over
-    zmq and get a response.
-    """
+    """Requesting a subscriber should send a zmq message and get a response."""
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
       'code': 200,
       'data': [
@@ -185,9 +179,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     self.assertTrue(self.sipauthserve_connection.socket.recv.called)
 
   def test_create_subscriber_with_ki(self):
-    """Creating a subscriber with a specficied ki should send a message over
-    zmq and get a response.
-    """
+    """Creating a subscriber should send a zmq message and get a response."""
     response = self.sipauthserve_connection.create_subscriber(
         310150123456789, 123456789, '127.0.0.1', '1234', ki='abc')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
@@ -208,9 +200,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_create_subscriber_sans_ki(self):
-    """Creating a subscriber without a specficied ki should still send a
-    message over zmq and get a response.
-    """
+    """Creating a subscriber without a specficied ki uses zmq."""
     response = self.sipauthserve_connection.create_subscriber(
         310150123456789, 123456789, '127.0.0.1', '1234')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
@@ -228,9 +218,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     self.assertEqual(response.code, SuccessCode.NoContent)
 
   def test_delete_subscriber_by_imsi(self):
-    """Deleting a subscriber by passing an IMSI should send a message over zmq
-    and get a response.
-    """
+    """Deleting a subscriber by IMSI should use zmq."""
     response = self.sipauthserve_connection.delete_subscriber(310150123456789)
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     expected_message = json.dumps({
@@ -246,10 +234,11 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     self.assertEqual(response.code, SuccessCode.NoContent)
 
 
-class SIPAuthServeNonNominalSubscriberTestCase(unittest.TestCase):
+class SIPAuthServeOffNominalSubscriberTestCase(unittest.TestCase):
   """Testing the components.SIPAuthServe class.
 
-  Applying nonnominal uses of the 'subscribers' command and 'sipauthserve' target.
+  Applying off-nominal uses of the 'subscribers' command and 'sipauthserve'
+  target.
   """
 
   def setUp(self):
@@ -273,7 +262,7 @@ class SIPAuthServeNonNominalSubscriberTestCase(unittest.TestCase):
     self.assertEqual([], response)
 
   def test_delete_subscriber_when_sqlite_unavailable(self):
-    """Testing the subscriber deletion case when OpenBTS reports sqlite is unavailble"""
+    """Invalid request when sqlite is unavailble."""
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
       'code': 503,
       'data': {
@@ -282,4 +271,4 @@ class SIPAuthServeNonNominalSubscriberTestCase(unittest.TestCase):
         }
       })
     with self.assertRaises(InvalidRequestError):
-        response = self.sipauthserve_connection.delete_subscriber(310150123456789)
+        self.sipauthserve_connection.delete_subscriber(310150123456789)
