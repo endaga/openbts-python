@@ -221,7 +221,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
       # an actual "dialdata_table create" message which should succeed.
       json.dumps({'code': 404}),
       json.dumps({'code': 200}),
-      # Then the ipaddr and port updates should succeed.
+      # Then the OpenBTS ipaddr and port updates should succeed.
       json.dumps({'code': 200}),
       json.dumps({'code': 200}),
     ]
@@ -239,7 +239,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
       # an actual "dialdata_table create" message which should succeed.
       json.dumps({'code': 404}),
       json.dumps({'code': 200}),
-      # Then the ipaddr and port updates should succeed.
+      # Then the OpenBTS ipaddr and port updates should succeed.
       json.dumps({'code': 200}),
       json.dumps({'code': 200}),
     ]

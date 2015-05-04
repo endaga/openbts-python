@@ -5,6 +5,7 @@ manages components in the OpenBTS application suite
 from openbts.core import BaseComponent
 from openbts.exceptions import InvalidRequestError
 
+
 class OpenBTS(BaseComponent):
   """Manages communication to an OpenBTS instance.
 
@@ -75,8 +76,8 @@ class SIPAuthServe(BaseComponent):
       an empty array if no subscribers match the query, or an array of
       subscriber dicts, themselves of the form: {
         'name': 'IMSI000123',
-        'ip': '127.0.0.1',
-        'port': '8888',
+        'openbts_ipaddr': '127.0.0.1',
+        'openbts_port': '8888',
         'numbers': ['5551234', '5556789'],
         'account_balance': '1000',
       }
@@ -103,8 +104,8 @@ class SIPAuthServe(BaseComponent):
     for subscriber in subscribers:
       simplified_subscriber = {
         'name': subscriber['name'],
-        'ipaddr': subscriber['ipaddr'],
-        'port': subscriber['port'],
+        'openbts_ipaddr': subscriber['ipaddr'],
+        'openbts_port': subscriber['port'],
         'numbers': self.get_numbers(subscriber['name']),
         'account_balance': self.get_account_balance(subscriber['name']),
         'caller_id': self.get_caller_id(subscriber['name']),
@@ -112,8 +113,8 @@ class SIPAuthServe(BaseComponent):
       simplified_subscribers.append(simplified_subscriber)
     return simplified_subscribers
 
-  def get_ipaddr(self, imsi):
-    """Get the IP address of a subscriber."""
+  def get_openbts_ipaddr(self, imsi):
+    """Get the OpenBTS IP address of a subscriber."""
     fields = ['ipaddr']
     qualifiers = {
       'name': imsi
@@ -127,8 +128,8 @@ class SIPAuthServe(BaseComponent):
     response = self._send_and_receive(message)
     return response.data[0]['ipaddr']
 
-  def get_port(self, imsi):
-    """Get the port of a subscriber."""
+  def get_openbts_port(self, imsi):
+    """Get the OpenBTS port of a subscriber."""
     fields = ['port']
     qualifiers = {
       'name': imsi
@@ -223,7 +224,8 @@ class SIPAuthServe(BaseComponent):
     result = self._send_and_receive(message)
     return result
 
-  def create_subscriber(self, imsi, msisdn, ipaddr, port, ki=''):
+  def create_subscriber(self, imsi, msisdn, openbts_ipaddr, openbts_port,
+                        ki=''):
     """Add a subscriber.
 
     Technically we don't need every subscriber to have a number, but we'll just
@@ -241,8 +243,8 @@ class SIPAuthServe(BaseComponent):
     Args:
       imsi: IMSI of the subscriber
       msisdn: MSISDN of the subscriber (their phone number)
-      ipaddr: IP of the subscriber's OpenBTS instance
-      port: port of the subscriber's OpenBTS instance
+      openbts_ipaddr: IP of the subscriber's OpenBTS instance
+      openbts_port: port of the subscriber's OpenBTS instance
       ki: authentication key of the subscriber
 
     Returns:
@@ -261,8 +263,8 @@ class SIPAuthServe(BaseComponent):
       'fields': {
         'imsi': str(imsi),
         'msisdn': str(msisdn),
-        'ipaddr': str(ipaddr),
-        'port': str(port),
+        'ipaddr': str(openbts_ipaddr),
+        'port': str(openbts_port),
         'name': str(imsi),
         'ki': str(ki)
       }
@@ -271,8 +273,8 @@ class SIPAuthServe(BaseComponent):
     self.add_number(imsi, msisdn)
     # In a recent upgrade, the IP and port are not being set correctly by this
     # message, so we will set them explicitly.
-    self.update_ipaddr(imsi, str(ipaddr))
-    self.update_port(imsi, str(port))
+    self.update_openbts_ipaddr(imsi, str(openbts_ipaddr))
+    self.update_openbts_port(imsi, str(openbts_port))
     return response
 
   def delete_subscriber(self, imsi):
@@ -294,7 +296,7 @@ class SIPAuthServe(BaseComponent):
     response = self._send_and_receive(message)
     return response
 
-  def update_ipaddr(self, imsi, new_ipaddr):
+  def update_openbts_ipaddr(self, imsi, new_openbts_ipaddr):
     """Updates a subscriber's IP address."""
     message = {
       'command': 'sip_buddies',
@@ -303,13 +305,13 @@ class SIPAuthServe(BaseComponent):
         'name': imsi
       },
       'fields': {
-        'ipaddr': new_ipaddr
+        'ipaddr': new_openbts_ipaddr
       }
     }
     return self._send_and_receive(message)
 
-  def update_port(self, imsi, new_port):
-    """Updates a subscriber's port."""
+  def update_openbts_port(self, imsi, new_openbts_port):
+    """Updates a subscriber's OpenBTS port."""
     message = {
       'command': 'sip_buddies',
       'action': 'update',
@@ -317,7 +319,7 @@ class SIPAuthServe(BaseComponent):
         'name': imsi
        },
       'fields': {
-        'port': new_port,
+        'port': new_openbts_port,
        }
     }
     return self._send_and_receive(message)

@@ -145,22 +145,24 @@ class SIPAuthServeTest(unittest.TestCase):
       self.conn.create_subscriber(self.sub_a_imsi, '5554321', '127.123.2.3',
                                   '4499')
 
-  def test_get_ipaddr(self):
-    self.assertEqual('123.234.123.234', self.conn.get_ipaddr(self.sub_b_imsi))
+  def test_get_openbts_ipaddr(self):
+    self.assertEqual('123.234.123.234',
+                     self.conn.get_openbts_ipaddr(self.sub_b_imsi))
 
-  def test_get_port(self):
-    self.assertEqual('8000', self.conn.get_port(self.sub_b_imsi))
+  def test_get_openbts_port(self):
+    self.assertEqual('8000', self.conn.get_openbts_port(self.sub_b_imsi))
 
   def test_get_single_number(self):
     self.assertEqual(['5556789'], self.conn.get_numbers(self.sub_b_imsi))
 
-  def test_set_ipaddr(self):
-    self.conn.update_ipaddr(self.sub_a_imsi, '244.255.200.201')
-    self.assertEqual('244.255.200.201', self.conn.get_ipaddr(self.sub_a_imsi))
+  def test_set_openbts_ipaddr(self):
+    self.conn.update_openbts_ipaddr(self.sub_a_imsi, '244.255.200.201')
+    self.assertEqual('244.255.200.201',
+                     self.conn.get_openbts_ipaddr(self.sub_a_imsi))
 
-  def test_set_port(self):
-    self.conn.update_port(self.sub_a_imsi, '9999')
-    self.assertEqual('9999', self.conn.get_port(self.sub_a_imsi))
+  def test_set_openbts_port(self):
+    self.conn.update_openbts_port(self.sub_a_imsi, '9999')
+    self.assertEqual('9999', self.conn.get_openbts_port(self.sub_a_imsi))
 
   def test_associate_more_numbers(self):
     """A subscriber can have multiple associated numbers."""
