@@ -263,3 +263,30 @@ class CallerIDTest(unittest.TestCase):
     self.assertEqual('5551234', self.conn.get_caller_id(self.sub_a_imsi))
     self.conn.delete_number(self.sub_a_imsi, '5551234')
     self.assertEqual(new_number, self.conn.get_caller_id(self.sub_a_imsi))
+
+
+class GPRSTest(unittest.TestCase):
+  """Testing GPRS usage.
+
+  This is an "instantaneous" API so some tests will pass or fail depending on
+  whether a phone is using GPRS when the test is run.
+  """
+
+  @classmethod
+  def setUpClass(cls):
+    cls.conn = openbts.components.SIPAuthServe(socket_timeout=0.1)
+
+  def test_online(self):
+    """This test passes when a phone is online and active."""
+    response = self.conn.get_gprs_usage()
+    self.assertEqual(dict, type(response))
+    ms_data = response[response.keys()[0]]
+    self.assertEqual(dict, type(ms_data))
+    self.assertEqual(int, ms_data['uploaded_bytes'])
+    self.assertEqual(int, ms_data['downloaded_bytes'])
+    self.assertEqual(str, ms_data['ipaddr'])
+
+  def test_offline(self):
+    """This test passes only when no phones are online."""
+    response = self.conn.get_gprs_usage()
+    self.assertEqual(None, response)
