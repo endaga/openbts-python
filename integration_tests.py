@@ -7,6 +7,7 @@ Usage (from the repo's root):
 
 Warning: this will change live values in OpenBTS.
 """
+
 import unittest
 
 import openbts
@@ -107,15 +108,15 @@ class SIPAuthServeTest(unittest.TestCase):
     result = self.conn.get_subscribers()
     expected_data = [{
       'name': self.sub_a_imsi,
-      'ipaddr': '127.0.0.1',
-      'port': '8888',
+      'openbts_ipaddr': '127.0.0.1',
+      'openbts_port': '8888',
       'numbers': ['5551234'],
       'account_balance': '0',
       'caller_id': '5551234',
     }, {
       'name': self.sub_b_imsi,
-      'ipaddr': '123.234.123.234',
-      'port': '8000',
+      'openbts_ipaddr': '123.234.123.234',
+      'openbts_port': '8000',
       'numbers': ['5556789'],
       'account_balance': '0',
       'caller_id': '5556789',
@@ -126,11 +127,11 @@ class SIPAuthServeTest(unittest.TestCase):
     result = self.conn.get_subscribers(imsi=self.sub_a_imsi)
     expected_data = [{
       'name': self.sub_a_imsi,
-      'ipaddr': '127.0.0.1',
-      'port': '8888',
-      'numbers': ['5551234'],
-      'account_balance': '0',
-      'caller_id': '5551234',
+      'openbts_ipaddr': u'127.0.0.1',
+      'openbts_port': u'8888',
+      'numbers': [u'5551234'],
+      'account_balance': u'0',
+      'caller_id': u'5551234',
     }]
     self.assertEqual(expected_data, result)
 
