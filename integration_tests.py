@@ -80,7 +80,7 @@ class OpenBTSMonitoringTest(unittest.TestCase):
   def test_monitor_openbts(self):
     connection = openbts.components.OpenBTS()
     response = connection.monitor()
-    self.assertIn(response.data, 'noiseRSSI')
+    self.assertIn('noiseRSSI', response.data)
 
 
 class SIPAuthServeTest(unittest.TestCase):
