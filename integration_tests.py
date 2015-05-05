@@ -268,8 +268,8 @@ class CallerIDTest(unittest.TestCase):
 class GPRSTest(unittest.TestCase):
   """Testing GPRS usage.
 
-  This is an "instantaneous" API so some tests will pass or fail depending on
-  whether a phone is using GPRS when the test is run.
+  This is an "instantaneous" API so the online test will only run to its
+  fullest extent if a phone is online and using GPRS at the time.
   """
 
   @classmethod
@@ -277,16 +277,18 @@ class GPRSTest(unittest.TestCase):
     cls.conn = openbts.components.SIPAuthServe(socket_timeout=0.1)
 
   def test_online(self):
-    """This test passes when a phone is online and active."""
+    """Get some GPRS parameters when a phone is active.
+
+    If no phones are active, this test will short-circuit itself (but should
+    still pass).
+    """
     response = self.conn.get_gprs_usage()
+    if not response:
+      # No phones are online, exit.
+      return
     self.assertEqual(dict, type(response))
     ms_data = response[response.keys()[0]]
     self.assertEqual(dict, type(ms_data))
     self.assertEqual(int, ms_data['uploaded_bytes'])
     self.assertEqual(int, ms_data['downloaded_bytes'])
     self.assertEqual(str, ms_data['ipaddr'])
-
-  def test_offline(self):
-    """This test passes only when no phones are online."""
-    response = self.conn.get_gprs_usage()
-    self.assertEqual(None, response)
