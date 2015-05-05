@@ -9,6 +9,7 @@ import openbts
 from openbts.components import SIPAuthServe
 from openbts.exceptions import InvalidRequestError
 from openbts.codes import SuccessCode
+from openbts.tests import mocks
 
 
 class SIPAuthServeNominalConfigTestCase(unittest.TestCase):
@@ -304,19 +305,23 @@ class SIPAuthServeOffNominalSubscriberTestCase(unittest.TestCase):
         self.sipauthserve_connection.delete_subscriber(310150123456789)
 
 
-class GPRSUsage(unittest.TestCase):
+class GPRSTest(unittest.TestCase):
   """Getting GPRS usage info for a subscriber by invoking OpenBTSCLI."""
 
   @classmethod
   def setUpClass(cls):
     """We use envoy to call the OpenBTSCLI so we'll monkeypatch that module."""
     cls.original_envoy = openbts.components.envoy
-    cls.mock_envoy = mock.Mock()
+    cls.mock_envoy = mocks.MockEnvoy(return_text=None)
+    openbts.components.envoy = cls.mock_envoy
     cls.sipauthserve = SIPAuthServe()
+    # Setup a path to the CLI output.
+    cls.cli_output_path = ('openbts/tests/fixtures/'
+                           'openbts_cli_gprs_list_output.txt')
 
   @classmethod
   def tearDownClass(cls):
-    """Repair the monkeypatch."""
+    """Repair the envoy monkeypatch."""
     openbts.components.envoy = cls.original_envoy
 
   def test_gprs_disabled(self):
@@ -324,52 +329,59 @@ class GPRSUsage(unittest.TestCase):
 
     This also occurs if phones are off and do not have IPs assigned.
     """
-    self.mock_envoy.return_value = '\n'
+    self.mock_envoy.return_text = '\n'
     response = self.sipauthserve.get_gprs_usage()
-    self.assertEqual({}, response)
-    response = self.sipauthserve.get_gprs_usage(imsi='IMSI000123')
+    self.assertEqual(None, response)
+    response = self.sipauthserve.get_gprs_usage(target_imsi='IMSI000123')
     self.assertEqual(None, response)
 
   def test_all_imsis(self):
     """We can get all available GPRS connection data."""
     # The command 'gprs list' returns a big string when IPs are assigned.
-    with open('fixtures/openbts_cli_gprs_list_output.txt') as output:
-        self.mock_envoy.return_value = output.read()
+    with open(self.cli_output_path) as output:
+        self.mock_envoy.return_text = output.read()
     expected_usage = {
         'IMSI901550000000022': {
             'ipaddr': '192.168.99.4',
-            'bytes_down': 139441,
             'bytes_up': 53495,
+            'bytes_down': 139441,
         },
         'IMSI901550000000505': {
             'ipaddr': '192.168.99.1',
-            'bytes_down': 41016,
             'bytes_up': 21254,
+            'bytes_down': 41016,
         },
         'IMSI901550000000504': {
             'ipaddr': '192.168.99.2',
-            'bytes_down': 77,
             'bytes_up': 111,
+            'bytes_down': 77,
         },
         'IMSI901550000000015': {
             'ipaddr': '192.168.99.3',
-            'bytes_down': 77,
             'bytes_up': 111,
+            'bytes_down': 77,
         },
     }
     self.assertEqual(expected_usage, self.sipauthserve.get_gprs_usage())
 
   def test_specific_imsi(self):
     """We can get data for a specific IMSI."""
-    with open('fixtures/openbts_cli_gprs_list_output.txt') as output:
-        self.mock_envoy.return_value = output.read()
+    with open(self.cli_output_path) as output:
+        self.mock_envoy.return_text = output.read()
     target_imsi = 'IMSI901550000000022'
     expected_usage = {
-        target_imsi: {
-            'ipaddr': '192.168.99.4',
-            'bytes_down': 139441,
-            'bytes_up': 53495,
-        },
+      'ipaddr': '192.168.99.4',
+      'bytes_up': 53495,
+      'bytes_down': 139441,
     }
     self.assertEqual(expected_usage,
-                     self.sipauthserve.get_gprs_usage(imsi=target_imsi))
+                     self.sipauthserve.get_gprs_usage(target_imsi=target_imsi))
+
+  def test_unknown_imsi(self):
+    """Unknown IMSIs will return None."""
+    with open(self.cli_output_path) as output:
+        self.mock_envoy.return_text = output.read()
+    target_imsi = 'IMSI000123'
+    expected_usage = None
+    self.assertEqual(expected_usage,
+                     self.sipauthserve.get_gprs_usage(target_imsi=target_imsi))

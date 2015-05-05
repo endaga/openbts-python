@@ -2,6 +2,8 @@
 manages components in the OpenBTS application suite
 """
 
+import re
+
 import envoy
 
 from openbts.core import BaseComponent
@@ -406,6 +408,60 @@ class SIPAuthServe(BaseComponent):
       }
     }
     return self._send_and_receive(message)
+
+  def get_gprs_usage(self, target_imsi=None):
+    """Get all available GPRS data, or that of a specific IMSI.
+
+    Will return a dict of the form: {
+      'ipaddr': '192.168.99.1',
+      'bytes_down': 200,
+      'bytes_up': 100,
+    }
+
+    Or, if no IMSI is specified, multiple dicts like the one above will be
+    returned as part of a larger dict, keyed by IMSI.
+
+    Args:
+      target_imsi: the subsciber-of-interest
+    """
+    response = envoy.run('/OpenBTS/OpenBTSCLI -c "gprs list"')
+    result = {}
+    for ms_block in response.std_out.split('MS#'):
+      try:
+        # Get the IMSI.
+        match = re.search(r'imsi=[\d]{15}', ms_block)
+        imsi = 'IMSI%s' % match.group(0).split('=')[1]
+        # Get the IP.
+        match = re.search(r'IPs=\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', ms_block)
+        ipaddr = match.group(0).split('=')[1]
+        # Get the uploaded and downloaded bytes.
+        match = re.search(r'Bytes:[0-9]+up\/[0-9]+down', ms_block)
+        count = match.group(0).split(':')[1]
+        bytes_up = int(count.split('/')[0].strip('up'))
+        bytes_down = int(count.split('/')[1].strip('down'))
+      except AttributeError:
+        # No match found.
+        continue
+      except ValueError:
+        # Casting to int failed.
+        continue
+      result[imsi] = {
+        'ipaddr': ipaddr,
+        'bytes_up': bytes_up,
+        'bytes_down': bytes_down,
+      }
+    # If, after all that parsing, we still haven't found any matches, return
+    # None instead of the empty dict.
+    if result == {}:
+      return None
+    # If a specific IMSI was specified, return its data alone if it's in the
+    # result.  If it's not in the parsed result, return None.
+    if target_imsi and target_imsi not in result.keys():
+      return None
+    elif target_imsi:
+      return result[target_imsi]
+    # If no IMSI was specified, return all of the parsed data.
+    return result
 
 
 class SMQueue(BaseComponent):
