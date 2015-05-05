@@ -58,7 +58,7 @@ MIT
 
 
 ### releases
-* 0.0.15 - get the GPRS ipaddr of a subscriber; adjusts other ipaddr and port attributes with the `openbts_` prefix
+* 0.0.15 - get GPRS ipaddr and data transfer information; adjusts other ipaddr and port attributes with the `openbts_` prefix
 * 0.0.14 - `get_numbers` returns an empty list instead of raising if no number is found for an IMSI
 * 0.0.13 - fixes `get_subscriber` and `create_subscriber` for the latest NM
 * 0.0.12 - correctly handles `caller_id` in get / update / delete operations
