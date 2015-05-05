@@ -343,23 +343,23 @@ class GPRSTest(unittest.TestCase):
     expected_usage = {
         'IMSI901550000000022': {
             'ipaddr': '192.168.99.4',
-            'bytes_up': 53495,
-            'bytes_down': 139441,
+            'uploaded_bytes': 53495,
+            'downloaded_bytes': 139441,
         },
         'IMSI901550000000505': {
             'ipaddr': '192.168.99.1',
-            'bytes_up': 21254,
-            'bytes_down': 41016,
+            'uploaded_bytes': 21254,
+            'downloaded_bytes': 41016,
         },
         'IMSI901550000000504': {
             'ipaddr': '192.168.99.2',
-            'bytes_up': 111,
-            'bytes_down': 77,
+            'uploaded_bytes': 111,
+            'downloaded_bytes': 77,
         },
         'IMSI901550000000015': {
             'ipaddr': '192.168.99.3',
-            'bytes_up': 111,
-            'bytes_down': 77,
+            'uploaded_bytes': 111,
+            'downloaded_bytes': 77,
         },
     }
     self.assertEqual(expected_usage, self.sipauthserve.get_gprs_usage())
@@ -371,8 +371,8 @@ class GPRSTest(unittest.TestCase):
     target_imsi = 'IMSI901550000000022'
     expected_usage = {
       'ipaddr': '192.168.99.4',
-      'bytes_up': 53495,
-      'bytes_down': 139441,
+      'uploaded_bytes': 53495,
+      'downloaded_bytes': 139441,
     }
     self.assertEqual(expected_usage,
                      self.sipauthserve.get_gprs_usage(target_imsi=target_imsi))

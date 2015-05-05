@@ -414,8 +414,8 @@ class SIPAuthServe(BaseComponent):
 
     Will return a dict of the form: {
       'ipaddr': '192.168.99.1',
-      'bytes_down': 200,
-      'bytes_up': 100,
+      'downloaded_bytes': 200,
+      'uploaded_bytes': 100,
     }
 
     Or, if no IMSI is specified, multiple dicts like the one above will be
@@ -437,8 +437,8 @@ class SIPAuthServe(BaseComponent):
         # Get the uploaded and downloaded bytes.
         match = re.search(r'Bytes:[0-9]+up\/[0-9]+down', ms_block)
         count = match.group(0).split(':')[1]
-        bytes_up = int(count.split('/')[0].strip('up'))
-        bytes_down = int(count.split('/')[1].strip('down'))
+        uploaded_bytes = int(count.split('/')[0].strip('up'))
+        downloaded_bytes = int(count.split('/')[1].strip('down'))
       except AttributeError:
         # No match found.
         continue
@@ -447,8 +447,8 @@ class SIPAuthServe(BaseComponent):
         continue
       result[imsi] = {
         'ipaddr': ipaddr,
-        'bytes_up': bytes_up,
-        'bytes_down': bytes_down,
+        'uploaded_bytes': uploaded_bytes,
+        'downloaded_bytes': downloaded_bytes,
       }
     # If, after all that parsing, we still haven't found any matches, return
     # None instead of the empty dict.
