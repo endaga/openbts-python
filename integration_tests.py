@@ -7,6 +7,7 @@ Usage (from the repo's root):
 
 Warning: this will change live values in OpenBTS.
 """
+
 import unittest
 
 import openbts
@@ -80,7 +81,7 @@ class OpenBTSMonitoringTest(unittest.TestCase):
   def test_monitor_openbts(self):
     connection = openbts.components.OpenBTS()
     response = connection.monitor()
-    self.assertIn(response.data, 'noiseRSSI')
+    self.assertIn('noiseRSSI', response.data)
 
 
 class SIPAuthServeTest(unittest.TestCase):
@@ -107,15 +108,15 @@ class SIPAuthServeTest(unittest.TestCase):
     result = self.conn.get_subscribers()
     expected_data = [{
       'name': self.sub_a_imsi,
-      'ipaddr': '127.0.0.1',
-      'port': '8888',
+      'openbts_ipaddr': '127.0.0.1',
+      'openbts_port': '8888',
       'numbers': ['5551234'],
       'account_balance': '0',
       'caller_id': '5551234',
     }, {
       'name': self.sub_b_imsi,
-      'ipaddr': '123.234.123.234',
-      'port': '8000',
+      'openbts_ipaddr': '123.234.123.234',
+      'openbts_port': '8000',
       'numbers': ['5556789'],
       'account_balance': '0',
       'caller_id': '5556789',
@@ -126,11 +127,11 @@ class SIPAuthServeTest(unittest.TestCase):
     result = self.conn.get_subscribers(imsi=self.sub_a_imsi)
     expected_data = [{
       'name': self.sub_a_imsi,
-      'ipaddr': '127.0.0.1',
-      'port': '8888',
-      'numbers': ['5551234'],
-      'account_balance': '0',
-      'caller_id': '5551234',
+      'openbts_ipaddr': u'127.0.0.1',
+      'openbts_port': u'8888',
+      'numbers': [u'5551234'],
+      'account_balance': u'0',
+      'caller_id': u'5551234',
     }]
     self.assertEqual(expected_data, result)
 
@@ -145,22 +146,24 @@ class SIPAuthServeTest(unittest.TestCase):
       self.conn.create_subscriber(self.sub_a_imsi, '5554321', '127.123.2.3',
                                   '4499')
 
-  def test_get_ipaddr(self):
-    self.assertEqual('123.234.123.234', self.conn.get_ipaddr(self.sub_b_imsi))
+  def test_get_openbts_ipaddr(self):
+    self.assertEqual('123.234.123.234',
+                     self.conn.get_openbts_ipaddr(self.sub_b_imsi))
 
-  def test_get_port(self):
-    self.assertEqual('8000', self.conn.get_port(self.sub_b_imsi))
+  def test_get_openbts_port(self):
+    self.assertEqual('8000', self.conn.get_openbts_port(self.sub_b_imsi))
 
   def test_get_single_number(self):
     self.assertEqual(['5556789'], self.conn.get_numbers(self.sub_b_imsi))
 
-  def test_set_ipaddr(self):
-    self.conn.update_ipaddr(self.sub_a_imsi, '244.255.200.201')
-    self.assertEqual('244.255.200.201', self.conn.get_ipaddr(self.sub_a_imsi))
+  def test_set_openbts_ipaddr(self):
+    self.conn.update_openbts_ipaddr(self.sub_a_imsi, '244.255.200.201')
+    self.assertEqual('244.255.200.201',
+                     self.conn.get_openbts_ipaddr(self.sub_a_imsi))
 
-  def test_set_port(self):
-    self.conn.update_port(self.sub_a_imsi, '9999')
-    self.assertEqual('9999', self.conn.get_port(self.sub_a_imsi))
+  def test_set_openbts_port(self):
+    self.conn.update_openbts_port(self.sub_a_imsi, '9999')
+    self.assertEqual('9999', self.conn.get_openbts_port(self.sub_a_imsi))
 
   def test_associate_more_numbers(self):
     """A subscriber can have multiple associated numbers."""
@@ -260,3 +263,32 @@ class CallerIDTest(unittest.TestCase):
     self.assertEqual('5551234', self.conn.get_caller_id(self.sub_a_imsi))
     self.conn.delete_number(self.sub_a_imsi, '5551234')
     self.assertEqual(new_number, self.conn.get_caller_id(self.sub_a_imsi))
+
+
+class GPRSTest(unittest.TestCase):
+  """Testing GPRS usage (experimental).
+
+  This is an "instantaneous" API so the online test will only run to its
+  fullest extent if a phone is online and using GPRS at the time.
+  """
+
+  @classmethod
+  def setUpClass(cls):
+    cls.conn = openbts.components.SIPAuthServe(socket_timeout=0.1)
+
+  def test_online(self):
+    """Get some GPRS parameters when a phone is active.
+
+    If no phones are active, this test will short-circuit itself (but should
+    still pass).
+    """
+    response = self.conn.get_gprs_usage()
+    if not response:
+      # No phones are online, exit.
+      return
+    self.assertEqual(dict, type(response))
+    ms_data = response[response.keys()[0]]
+    self.assertEqual(dict, type(ms_data))
+    self.assertEqual(int, ms_data['uploaded_bytes'])
+    self.assertEqual(int, ms_data['downloaded_bytes'])
+    self.assertEqual(str, ms_data['ipaddr'])

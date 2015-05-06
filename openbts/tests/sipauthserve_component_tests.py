@@ -5,9 +5,11 @@ import unittest
 
 import mock
 
+import openbts
 from openbts.components import SIPAuthServe
 from openbts.exceptions import InvalidRequestError
 from openbts.codes import SuccessCode
+from openbts.tests import mocks
 
 
 class SIPAuthServeNominalConfigTestCase(unittest.TestCase):
@@ -221,7 +223,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
       # an actual "dialdata_table create" message which should succeed.
       json.dumps({'code': 404}),
       json.dumps({'code': 200}),
-      # Then the ipaddr and port updates should succeed.
+      # Then the OpenBTS ipaddr and port updates should succeed.
       json.dumps({'code': 200}),
       json.dumps({'code': 200}),
     ]
@@ -239,7 +241,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
       # an actual "dialdata_table create" message which should succeed.
       json.dumps({'code': 404}),
       json.dumps({'code': 200}),
-      # Then the ipaddr and port updates should succeed.
+      # Then the OpenBTS ipaddr and port updates should succeed.
       json.dumps({'code': 200}),
       json.dumps({'code': 200}),
     ]
@@ -301,3 +303,85 @@ class SIPAuthServeOffNominalSubscriberTestCase(unittest.TestCase):
       })
     with self.assertRaises(InvalidRequestError):
         self.sipauthserve_connection.delete_subscriber(310150123456789)
+
+
+class GPRSTest(unittest.TestCase):
+  """Getting GPRS usage info for a subscriber by invoking OpenBTSCLI."""
+
+  @classmethod
+  def setUpClass(cls):
+    """We use envoy to call the OpenBTSCLI so we'll monkeypatch that module."""
+    cls.original_envoy = openbts.components.envoy
+    cls.mock_envoy = mocks.MockEnvoy(return_text=None)
+    openbts.components.envoy = cls.mock_envoy
+    cls.sipauthserve = SIPAuthServe()
+    # Setup a path to the CLI output.
+    cls.cli_output_path = ('openbts/tests/fixtures/'
+                           'openbts_cli_gprs_list_output.txt')
+
+  @classmethod
+  def tearDownClass(cls):
+    """Repair the envoy monkeypatch."""
+    openbts.components.envoy = cls.original_envoy
+
+  def test_gprs_disabled(self):
+    """Envoy gets an empty reply when GPRS is disabled.
+
+    This also occurs if phones are off and do not have IPs assigned.
+    """
+    self.mock_envoy.return_text = '\n'
+    response = self.sipauthserve.get_gprs_usage()
+    self.assertEqual(None, response)
+    response = self.sipauthserve.get_gprs_usage(target_imsi='IMSI000123')
+    self.assertEqual(None, response)
+
+  def test_all_imsis(self):
+    """We can get all available GPRS connection data."""
+    # The command 'gprs list' returns a big string when IPs are assigned.
+    with open(self.cli_output_path) as output:
+        self.mock_envoy.return_text = output.read()
+    expected_usage = {
+        'IMSI901550000000022': {
+            'ipaddr': '192.168.99.4',
+            'uploaded_bytes': 53495,
+            'downloaded_bytes': 139441,
+        },
+        'IMSI901550000000505': {
+            'ipaddr': '192.168.99.1',
+            'uploaded_bytes': 21254,
+            'downloaded_bytes': 41016,
+        },
+        'IMSI901550000000504': {
+            'ipaddr': '192.168.99.2',
+            'uploaded_bytes': 111,
+            'downloaded_bytes': 77,
+        },
+        'IMSI901550000000015': {
+            'ipaddr': '192.168.99.3',
+            'uploaded_bytes': 111,
+            'downloaded_bytes': 77,
+        },
+    }
+    self.assertEqual(expected_usage, self.sipauthserve.get_gprs_usage())
+
+  def test_specific_imsi(self):
+    """We can get data for a specific IMSI."""
+    with open(self.cli_output_path) as output:
+        self.mock_envoy.return_text = output.read()
+    target_imsi = 'IMSI901550000000022'
+    expected_usage = {
+      'ipaddr': '192.168.99.4',
+      'uploaded_bytes': 53495,
+      'downloaded_bytes': 139441,
+    }
+    self.assertEqual(expected_usage,
+                     self.sipauthserve.get_gprs_usage(target_imsi=target_imsi))
+
+  def test_unknown_imsi(self):
+    """Unknown IMSIs will return None."""
+    with open(self.cli_output_path) as output:
+        self.mock_envoy.return_text = output.read()
+    target_imsi = 'IMSI000123'
+    expected_usage = None
+    self.assertEqual(expected_usage,
+                     self.sipauthserve.get_gprs_usage(target_imsi=target_imsi))
