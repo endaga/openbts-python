@@ -410,7 +410,7 @@ class SIPAuthServe(BaseComponent):
     return self._send_and_receive(message)
 
   def get_gprs_usage(self, target_imsi=None):
-    """Get all available GPRS data, or that of a specific IMSI.
+    """Get all available GPRS data, or that of a specific IMSI (experimental).
 
     Will return a dict of the form: {
       'ipaddr': '192.168.99.1',

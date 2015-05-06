@@ -266,7 +266,7 @@ class CallerIDTest(unittest.TestCase):
 
 
 class GPRSTest(unittest.TestCase):
-  """Testing GPRS usage.
+  """Testing GPRS usage (experimental).
 
   This is an "instantaneous" API so the online test will only run to its
   fullest extent if a phone is online and using GPRS at the time.
