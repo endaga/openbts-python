@@ -18,8 +18,8 @@ class OpenBTS(BaseComponent):
   """
 
   def __init__(self, **kwargs):
-    self.address = kwargs.pop('address', 'tcp://127.0.0.1:45060')
     super(OpenBTS, self).__init__(**kwargs)
+    self.address = kwargs.pop('address', 'tcp://127.0.0.1:45060')
     self.socket.connect(self.address)
 
   def __repr__(self):
@@ -50,8 +50,8 @@ class SIPAuthServe(BaseComponent):
   """
 
   def __init__(self, **kwargs):
-    self.address = kwargs.pop('address', 'tcp://127.0.0.1:45064')
     super(SIPAuthServe, self).__init__(**kwargs)
+    self.address = kwargs.pop('address', 'tcp://127.0.0.1:45064')
     self.socket.connect(self.address)
 
   def __repr__(self):
@@ -472,8 +472,8 @@ class SMQueue(BaseComponent):
   """
 
   def __init__(self, **kwargs):
-    self.address = kwargs.pop('address', 'tcp://127.0.0.1:45063')
     super(SMQueue, self).__init__(**kwargs)
+    self.address = kwargs.pop('address', 'tcp://127.0.0.1:45063')
     self.socket.connect(self.address)
 
   def __repr__(self):
