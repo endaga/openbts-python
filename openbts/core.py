@@ -23,6 +23,9 @@ class BaseComponent(object):
   def __init__(self, **kwargs):
     self.address = None
     self.setup_socket()
+    # The socket will poll for this amount of time and recv if there is a
+    # response available.
+    self.socket_timeout = kwargs.pop('socket_timeout', 10)  # seconds
 
   def setup_socket(self):
     """Sets up the ZMQ socket."""
@@ -34,9 +37,6 @@ class BaseComponent(object):
     self.socket.setsockopt(zmq.LINGER, 0)
     # RCVTIME0 sets a timeout for socket.recv.
     self.socket.setsockopt(zmq.RCVTIMEO, 500)  # milliseconds
-    # The socket will poll for this amount of time and recv if there is a
-    # response available.
-    self.socket_timeout = kwargs.pop('socket_timeout', 10)  # seconds
 
   def create_config(self, key, value):
     """Create a config parameter and initialize it.
