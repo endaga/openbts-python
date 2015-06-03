@@ -15,18 +15,28 @@ class BaseComponent(object):
 
   The intent is to create other components that inherit from this base class.
 
-  Kwargs:
-    socket_timeout: time in seconds to wait on self.socket.recv before raising
-        a TimeoutError
+  kwargs:
+    socket_timeout: time to poll the socket for values before raising a
+                    TimeoutError
   """
 
   def __init__(self, **kwargs):
+    self.address = None
+    self.setup_socket()
+
+  def setup_socket(self):
+    """Sets up the ZMQ socket."""
     context = zmq.Context()
-    # the component inheriting from BaseComponent should call connect on this
-    # socket with the appropriate address
+    # The component inheriting from BaseComponent should self.socket.connect
+    # with the appropriate address.
     self.socket = context.socket(zmq.REQ)
-    self.socket.setsockopt(zmq.LINGER, 0) # zmq.LINGER sets a timeout for socket.send
-    self.socket_timeout = kwargs.pop('socket_timeout', 10)
+    # LINGER sets a timeout for socket.send.
+    self.socket.setsockopt(zmq.LINGER, 0)
+    # RCVTIME0 sets a timeout for socket.recv.
+    self.socket.setsockopt(zmq.RCVTIMEO, 500)  # milliseconds
+    # The socket will poll for this amount of time and recv if there is a
+    # response available.
+    self.socket_timeout = kwargs.pop('socket_timeout', 10)  # seconds
 
   def create_config(self, key, value):
     """Create a config parameter and initialize it.
@@ -136,10 +146,18 @@ class BaseComponent(object):
     self.socket.send(json.dumps(message))
     responses = self.socket.poll(timeout=self.socket_timeout * 1000)
     if responses:
-      raw_response_data = self.socket.recv()
-      return Response(raw_response_data)
+      try:
+        raw_response_data = self.socket.recv()
+        return Response(raw_response_data)
+      except zmq.Again:
+        # Reset the socket or it will be left in a bad state, waiting for a
+        # response.
+        self.socket.close()
+        self.setup_socket()
+        self.socket.connect(self.address)
+        raise TimeoutError('recv did not receive a response')
     else:
-      raise TimeoutError('did not receive a response')
+      raise TimeoutError('polling did not receive a response')
 
 
 class Response(object):
