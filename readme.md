@@ -58,6 +58,7 @@ MIT
 
 
 ### releases
+* 0.0.17 - sets `RCVTIME0` on zmq sockets
 * 0.0.16 - adds `envoy` to `setup.py`
 * 0.0.15 - get GPRS information (experimental); prefixes other ipaddr and port attributes with `openbts_`
 * 0.0.14 - `get_numbers` returns an empty list instead of raising if no number is found for an IMSI
