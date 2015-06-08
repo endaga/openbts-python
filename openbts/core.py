@@ -10,6 +10,7 @@ from openbts.exceptions import (InvalidRequestError, InvalidResponseError,
                                 TimeoutError)
 from openbts.codes import (SuccessCode, ErrorCode)
 
+
 class BaseComponent(object):
   """Manages a zeromq connection.
 
@@ -142,7 +143,7 @@ class BaseComponent(object):
     Raises:
       TimeoutError: if nothing is received for the timeout
     """
-    # send the message and poll for responses
+    # Send the message and poll for responses.
     self.socket.send(json.dumps(message))
     responses = self.socket.poll(timeout=self.socket_timeout * 1000)
     if responses:
@@ -182,14 +183,14 @@ class Response(object):
     if 'code' not in data.keys():
       raise InvalidResponseError('key "code" not in raw response: "%s"' %
                                  raw_response_data)
-    # if the request was successful, create a response object and exit
+    # If the request was successful, create a response object and exit.
     if data['code'] in list(SuccessCode):
       self.code = SuccessCode(data['code'])
       self.data = data.get('data', None)
       self.dirty = data.get('dirty', None)
       return
 
-    # if the request failed for some reason, raise an error
+    # If the request failed for some reason, raise an error.
     if data['code'] in list(ErrorCode):
       if data['code'] == ErrorCode.NotFound:
         raise InvalidRequestError('not found')
@@ -206,6 +207,6 @@ class Response(object):
         raise InvalidRequestError('service unavailable')
       elif data['code'] == ErrorCode.UnknownAction:
         raise InvalidRequestError('unknown action')
-    # handle unknown response codes
+    # Handle unknown response codes.
     else:
       raise InvalidResponseError('code "%s" not known' % data['code'])
