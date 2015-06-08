@@ -20,8 +20,14 @@ class SMQueueNominalConfigTestCase(unittest.TestCase):
 
   def setUp(self):
     self.smqueue_connection = SMQueue()
-    # mock a zmq socket with a simple recv return value
+    # Mock the zmq socket attribute, as well as the setup_socket method.  We'll
+    # also prevent the socket from being nullified by mocking the
+    # teardown_socket method, allowing us to inspect the data sent to the
+    # socket.
     self.smqueue_connection.socket = mock.Mock()
+    self.smqueue_connection.setup_socket = lambda: True
+    self.smqueue_connection.teardown_socket = lambda: True
+    # Create a mock return value for the socket.
     self.smqueue_connection.socket.recv.return_value = json.dumps({
       'code': 204,
       'data': 'sample',
@@ -82,8 +88,13 @@ class SMQueueOffNominalConfigTestCase(unittest.TestCase):
 
   def setUp(self):
     self.smqueue_connection = SMQueue()
-    # mock a zmq socket
+    # Mock the zmq socket attribute, as well as the setup_socket method.  We'll
+    # also prevent the socket from being nullified by mocking the
+    # teardown_socket method, allowing us to inspect the data sent to the
+    # socket.
     self.smqueue_connection.socket = mock.Mock()
+    self.smqueue_connection.setup_socket = lambda: True
+    self.smqueue_connection.teardown_socket = lambda: True
 
   def test_read_config_unknown_key(self):
     """Reading a nonexistent key raises an error."""
@@ -115,8 +126,14 @@ class SMQueueNominalGetVersionTestCase(unittest.TestCase):
 
   def setUp(self):
     self.smqueue_connection = SMQueue()
-    # mock a zmq socket with a simple recv return value
+    # Mock the zmq socket attribute, as well as the setup_socket method.  We'll
+    # also prevent the socket from being nullified by mocking the
+    # teardown_socket method, allowing us to inspect the data sent to the
+    # socket.
     self.smqueue_connection.socket = mock.Mock()
+    self.smqueue_connection.setup_socket = lambda: True
+    self.smqueue_connection.teardown_socket = lambda: True
+    # Create a mock return value for the socket.
     self.smqueue_connection.socket.recv.return_value = json.dumps({
       'code': 200,
       'data': 'release 4'

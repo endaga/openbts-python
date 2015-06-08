@@ -52,6 +52,6 @@ class BaseComponentTestCase(unittest.TestCase):
     # The server will delay before sending response so we set the timeout to be
     # a bit less than that delay.
     component = BaseComponent(socket_timeout=self.RESPONSE_DELAY*0.9)
-    component.socket.connect(self.DEMO_ADDRESS)
+    component.address = self.DEMO_ADDRESS
     with self.assertRaises(TimeoutError):
       component.read_config('sample-key')

@@ -9,7 +9,7 @@ import mock
 
 from openbts.components import OpenBTS
 from openbts.exceptions import InvalidRequestError
-from openbts.codes import (SuccessCode, ErrorCode)
+from openbts.codes import SuccessCode
 
 
 class OpenBTSNominalConfigTestCase(unittest.TestCase):
@@ -20,8 +20,14 @@ class OpenBTSNominalConfigTestCase(unittest.TestCase):
 
   def setUp(self):
     self.openbts_connection = OpenBTS()
-    # mock a zmq socket with a simple recv return value
+    # Mock the zmq socket attribute, as well as the setup_socket method.  We'll
+    # also prevent the socket from being nullified by mocking the
+    # teardown_socket method, allowing us to inspect the data sent to the
+    # socket.
     self.openbts_connection.socket = mock.Mock()
+    self.openbts_connection.setup_socket = lambda: True
+    self.openbts_connection.teardown_socket = lambda: True
+    # Create a mock return value for the socket.
     self.openbts_connection.socket.recv.return_value = json.dumps({
       'code': 204,
       'data': 'sample',
@@ -99,8 +105,19 @@ class OpenBTSOffNominalConfigTestCase(unittest.TestCase):
 
   def setUp(self):
     self.openbts_connection = OpenBTS()
-    # mock a zmq socket
+    # Mock the zmq socket attribute, as well as the setup_socket method.  We'll
+    # also prevent the socket from being nullified by mocking the
+    # teardown_socket method, allowing us to inspect the data sent to the
+    # socket.
     self.openbts_connection.socket = mock.Mock()
+    self.openbts_connection.setup_socket = lambda: True
+    self.openbts_connection.teardown_socket = lambda: True
+    # Create a mock return value for the socket.
+    self.openbts_connection.socket.recv.return_value = json.dumps({
+      'code': 204,
+      'data': 'sample',
+      'dirty': 0
+    })
 
   def test_read_config_unknown_key(self):
     """Reading a nonexistent key raises an error."""
@@ -132,8 +149,14 @@ class OpenBTSNominalGetVersionTestCase(unittest.TestCase):
 
   def setUp(self):
     self.openbts_connection = OpenBTS()
-    # mock a zmq socket with a simple recv return value
+    # Mock the zmq socket attribute, as well as the setup_socket method.  We'll
+    # also prevent the socket from being nullified by mocking the
+    # teardown_socket method, allowing us to inspect the data sent to the
+    # socket.
     self.openbts_connection.socket = mock.Mock()
+    self.openbts_connection.setup_socket = lambda: True
+    self.openbts_connection.teardown_socket = lambda: True
+    # Create a mock return value for the socket.
     self.openbts_connection.socket.recv.return_value = json.dumps({
       'code': 200,
       'data': 'release 4.0.0.8025'
@@ -160,8 +183,14 @@ class OpenBTSNominalMonitorTestCase(unittest.TestCase):
 
   def setUp(self):
     self.openbts_connection = OpenBTS()
-    # mock a zmq socket with a simple recv return value
+    # Mock the zmq socket attribute, as well as the setup_socket method.  We'll
+    # also prevent the socket from being nullified by mocking the
+    # teardown_socket method, allowing us to inspect the data sent to the
+    # socket.
     self.openbts_connection.socket = mock.Mock()
+    self.openbts_connection.setup_socket = lambda: True
+    self.openbts_connection.teardown_socket = lambda: True
+    # Create a mock return value for the socket.
     self.openbts_connection.socket.recv.return_value = json.dumps({
       'code': 200,
       'data': {

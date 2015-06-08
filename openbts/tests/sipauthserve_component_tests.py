@@ -20,8 +20,14 @@ class SIPAuthServeNominalConfigTestCase(unittest.TestCase):
 
   def setUp(self):
     self.sipauthserve_connection = SIPAuthServe()
-    # mock a zmq socket with a simple recv return value
+    # Mock the zmq socket attribute, as well as the setup_socket method.  We'll
+    # also prevent the socket from being nullified by mocking the
+    # teardown_socket method, allowing us to inspect the data sent to the
+    # socket.
     self.sipauthserve_connection.socket = mock.Mock()
+    self.sipauthserve_connection.setup_socket = lambda: True
+    self.sipauthserve_connection.teardown_socket = lambda: True
+    # Create a mock return value for the socket.
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
       'code': 204,
       'data': 'sample',
@@ -83,8 +89,13 @@ class SIPAuthServeOffNominalConfigTestCase(unittest.TestCase):
 
   def setUp(self):
     self.sipauthserve_connection = SIPAuthServe()
-    # mock a zmq socket
+    # Mock the zmq socket attribute, as well as the setup_socket method.  We'll
+    # also prevent the socket from being nullified by mocking the
+    # teardown_socket method, allowing us to inspect the data sent to the
+    # socket.
     self.sipauthserve_connection.socket = mock.Mock()
+    self.sipauthserve_connection.setup_socket = lambda: True
+    self.sipauthserve_connection.teardown_socket = lambda: True
 
   def test_read_config_unknown_key(self):
     """Reading a nonexistent key raises an error."""
@@ -116,8 +127,14 @@ class SIPAuthServeNominalGetVersionTestCase(unittest.TestCase):
 
   def setUp(self):
     self.sipauthserve_connection = SIPAuthServe()
-    # mock a zmq socket with a simple recv return value
+    # Mock the zmq socket attribute, as well as the setup_socket method.  We'll
+    # also prevent the socket from being nullified by mocking the
+    # teardown_socket method, allowing us to inspect the data sent to the
+    # socket.
     self.sipauthserve_connection.socket = mock.Mock()
+    self.sipauthserve_connection.setup_socket = lambda: True
+    self.sipauthserve_connection.teardown_socket = lambda: True
+    # Create a mock return value for the socket.
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
       'code': 200,
       'data': 'release 7'
@@ -147,8 +164,14 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
 
   def setUp(self):
     self.sipauthserve_connection = SIPAuthServe()
-    # mock a zmq socket with a simple recv return value
+    # Mock the zmq socket attribute, as well as the setup_socket method.  We'll
+    # also prevent the socket from being nullified by mocking the
+    # teardown_socket method, allowing us to inspect the data sent to the
+    # socket.
     self.sipauthserve_connection.socket = mock.Mock()
+    self.sipauthserve_connection.setup_socket = lambda: True
+    self.sipauthserve_connection.teardown_socket = lambda: True
+    # Create a mock return value for the socket.
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
       'code': 204,
       'data': [{'exten': '5551234', 'name': 'sample'}],
@@ -229,6 +252,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
     ]
     self.sipauthserve_connection.create_subscriber(
         310150123456789, 123456789, '127.0.0.1', '1234', ki='abc')
+    # TODO(matt): assert
 
   def test_create_subscriber_sans_ki(self):
     """Creating a subscriber without a specficied ki uses zmq."""
@@ -245,7 +269,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
       json.dumps({'code': 200}),
       json.dumps({'code': 200}),
     ]
-    response = self.sipauthserve_connection.create_subscriber(
+    self.sipauthserve_connection.create_subscriber(
         310150123456789, 123456789, '127.0.0.1', '1234')
 
   def test_delete_subscriber_by_imsi(self):
@@ -274,8 +298,14 @@ class SIPAuthServeOffNominalSubscriberTestCase(unittest.TestCase):
 
   def setUp(self):
     self.sipauthserve_connection = SIPAuthServe()
-    # mock a zmq socket with a simple recv return value
+    # Mock the zmq socket attribute, as well as the setup_socket method.  We'll
+    # also prevent the socket from being nullified by mocking the
+    # teardown_socket method, allowing us to inspect the data sent to the
+    # socket.
     self.sipauthserve_connection.socket = mock.Mock()
+    self.sipauthserve_connection.setup_socket = lambda: True
+    self.sipauthserve_connection.teardown_socket = lambda: True
+    # Create a mock return value for the socket.
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
       'code': 200,
       'data': 'sample',
@@ -302,7 +332,7 @@ class SIPAuthServeOffNominalSubscriberTestCase(unittest.TestCase):
         }
       })
     with self.assertRaises(InvalidRequestError):
-        self.sipauthserve_connection.delete_subscriber(310150123456789)
+      self.sipauthserve_connection.delete_subscriber(310150123456789)
 
 
 class GPRSTest(unittest.TestCase):
@@ -315,6 +345,11 @@ class GPRSTest(unittest.TestCase):
     cls.mock_envoy = mocks.MockEnvoy(return_text=None)
     openbts.components.envoy = cls.mock_envoy
     cls.sipauthserve = SIPAuthServe()
+    # Mock the zmq socket attribute, as well as the setup and teardown_socket
+    # methods.
+    cls.sipauthserve.socket = mock.Mock()
+    cls.sipauthserve.setup_socket = lambda: True
+    cls.sipauthserve.teardown_socket = lambda: True
     # Setup a path to the CLI output.
     cls.cli_output_path = ('openbts/tests/fixtures/'
                            'openbts_cli_gprs_list_output.txt')
@@ -339,7 +374,7 @@ class GPRSTest(unittest.TestCase):
     """We can get all available GPRS connection data."""
     # The command 'gprs list' returns a big string when IPs are assigned.
     with open(self.cli_output_path) as output:
-        self.mock_envoy.return_text = output.read()
+      self.mock_envoy.return_text = output.read()
     expected_usage = {
         'IMSI901550000000022': {
             'ipaddr': '192.168.99.4',
@@ -367,7 +402,7 @@ class GPRSTest(unittest.TestCase):
   def test_specific_imsi(self):
     """We can get data for a specific IMSI."""
     with open(self.cli_output_path) as output:
-        self.mock_envoy.return_text = output.read()
+      self.mock_envoy.return_text = output.read()
     target_imsi = 'IMSI901550000000022'
     expected_usage = {
       'ipaddr': '192.168.99.4',
@@ -380,7 +415,7 @@ class GPRSTest(unittest.TestCase):
   def test_unknown_imsi(self):
     """Unknown IMSIs will return None."""
     with open(self.cli_output_path) as output:
-        self.mock_envoy.return_text = output.read()
+      self.mock_envoy.return_text = output.read()
     target_imsi = 'IMSI000123'
     expected_usage = None
     self.assertEqual(expected_usage,

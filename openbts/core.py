@@ -23,21 +23,30 @@ class BaseComponent(object):
 
   def __init__(self, **kwargs):
     self.address = None
-    self.setup_socket()
+    self.context = None
+    self.socket = None
     # The socket will poll for this amount of time and recv if there is a
     # response available.
     self.socket_timeout = kwargs.pop('socket_timeout', 10)  # seconds
 
   def setup_socket(self):
     """Sets up the ZMQ socket."""
-    context = zmq.Context()
+    self.context = zmq.Context()
     # The component inheriting from BaseComponent should self.socket.connect
     # with the appropriate address.
-    self.socket = context.socket(zmq.REQ)
+    self.socket = self.context.socket(zmq.REQ)
     # LINGER sets a timeout for socket.send.
     self.socket.setsockopt(zmq.LINGER, 0)
     # RCVTIME0 sets a timeout for socket.recv.
     self.socket.setsockopt(zmq.RCVTIMEO, 500)  # milliseconds
+    # Connect to the address provided by the component.
+    self.socket.connect(self.address)
+
+  def teardown_socket(self):
+    """Destroys the attached zmq context and socket."""
+    self.context.destroy()
+    self.context = None
+    self.socket = None
 
   def create_config(self, key, value):
     """Create a config parameter and initialize it.
@@ -134,6 +143,10 @@ class BaseComponent(object):
     of the Response.  Can also timeout if the socket receives no data for some
     period.
 
+    Before sending, this method will call self.setup_socket to instantiate a
+    zmq context and a socket.  Before this method returns it will destroy the
+    context and all attached sockets.
+
     Args:
       message: dict of a message to send to NM
 
@@ -143,6 +156,7 @@ class BaseComponent(object):
     Raises:
       TimeoutError: if nothing is received for the timeout
     """
+    self.setup_socket()
     # Send the message and poll for responses.
     self.socket.send(json.dumps(message))
     responses = self.socket.poll(timeout=self.socket_timeout * 1000)
@@ -151,13 +165,11 @@ class BaseComponent(object):
         raw_response_data = self.socket.recv()
         return Response(raw_response_data)
       except zmq.Again:
-        # Reset the socket or it will be left in a bad state, waiting for a
-        # response.
-        self.socket.close()
-        self.setup_socket()
-        self.socket.connect(self.address)
         raise TimeoutError('recv did not receive a response')
+      finally:
+        self.teardown_socket()
     else:
+      self.teardown_socket()
       raise TimeoutError('polling did not receive a response')
 
 
