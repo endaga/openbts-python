@@ -1,0 +1,15 @@
+[FORMAT]
+# the string used as indentation unit
+indent-string='  '
+# spaces of indent required inside a hanging or continued line
+indent-after-paren=2
+
+
+[MESSAGES CONTROL]
+# http://pylint-messages.wikidot.com/all-messages
+# W0621: Redefining name %r from outer scope (line %s)
+# C0103: Invalid %s name "%s"
+# W0141: Used builtin function %r
+# C0330: Wrong hanging indentation
+# W0142: Used * or ** magic
+disable=W0621,C0103,W0141,C0330,W0142
