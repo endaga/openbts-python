@@ -47,6 +47,13 @@ class BaseComponentTestCase(unittest.TestCase):
     self.demo_server_process.terminate()
     self.demo_server_process.join()
 
+  def test_socket(self):
+    """Base socket should receive a reply with default timeouts."""
+    component = BaseComponent(socket_timeout=10)
+    component.address = self.DEMO_ADDRESS
+    response = component.read_config('sample-key')
+    self.assertTrue(isinstance(response.data, unicode))
+
   def test_socket_timeout(self):
     """Base socket should raise a TimeoutError after receiving no reply."""
     # The server will delay before sending response so we set the timeout to be
