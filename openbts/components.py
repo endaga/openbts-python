@@ -316,10 +316,10 @@ class SIPAuthServe(BaseComponent):
       'action': 'update',
       'match': {
         'name': imsi
-       },
+      },
       'fields': {
         'port': new_openbts_port,
-       }
+      }
     }
     return self._send_and_receive(message)
 
@@ -333,10 +333,10 @@ class SIPAuthServe(BaseComponent):
       'action': 'update',
       'match': {
         'name': imsi
-       },
+      },
       'fields': {
         'callerid': new_caller_id,
-       }
+      }
     }
     return self._send_and_receive(message)
 
