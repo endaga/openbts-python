@@ -194,9 +194,10 @@ class SIPAuthServeTest(unittest.TestCase):
                           self.conn.get_numbers(self.sub_a_imsi))
 
   def test_delete_subscribers(self):
+    first_count = self.conn.count_subscribers()
     self.conn.delete_subscriber(imsi=self.sub_a_imsi)
     self.conn.delete_subscriber(imsi=self.sub_b_imsi)
-    self.assertEqual(0, self.conn.count_subscribers())
+    self.assertEqual(first_count - 2, self.conn.count_subscribers())
 
   def test_get_imsi_from_number(self):
     result = self.conn.get_imsi_from_number('5551234')
