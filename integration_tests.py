@@ -37,15 +37,18 @@ class ConfigReadTest(unittest.TestCase):
 
   def test_read_openbts_config(self):
     connection = openbts.components.OpenBTS()
-    connection.read_config('Control.NumSQLTries')
+    response = connection.read_config('Control.NumSQLTries')
+    self.assertTrue(isinstance(response.data, dict))
 
   def test_read_sipauthserve_config(self):
     connection = openbts.components.SIPAuthServe()
-    connection.read_config('Log.Alarms.Max')
+    response = connection.read_config('Log.Alarms.Max')
+    self.assertTrue(isinstance(response.data, dict))
 
   def test_read_smqueue_config(self):
     connection = openbts.components.SMQueue()
-    connection.read_config('Bounce.Code')
+    response = connection.read_config('Bounce.Code')
+    self.assertTrue(isinstance(response.data, dict))
 
 
 class ConfigUpdateTest(unittest.TestCase):
