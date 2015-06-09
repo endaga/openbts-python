@@ -292,6 +292,6 @@ class GPRSTest(unittest.TestCase):
     self.assertEqual(dict, type(response))
     ms_data = response[response.keys()[0]]
     self.assertEqual(dict, type(ms_data))
-    self.assertEqual(int, ms_data['uploaded_bytes'])
-    self.assertEqual(int, ms_data['downloaded_bytes'])
-    self.assertEqual(str, ms_data['ipaddr'])
+    self.assertEqual(int, type(ms_data['uploaded_bytes']))
+    self.assertEqual(int, type(ms_data['downloaded_bytes']))
+    self.assertEqual(str, type(ms_data['ipaddr']))
