@@ -99,7 +99,6 @@ class SIPAuthServe(BaseComponent):
       subscribers = response.data
     except InvalidRequestError:
       return []
-
     # We get back every field in the SR, most of which are not useful.  We will
     # simplify each subscriber dict to show just a few attributes.  And we'll
     # attach additional info on associated numbers, account balance and the
