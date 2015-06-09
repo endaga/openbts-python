@@ -275,10 +275,6 @@ class SIPAuthServe(BaseComponent):
     }
     response = self._send_and_receive(message)
     self.add_number(imsi, msisdn)
-    # In a recent upgrade, the IP and port are not being set correctly by this
-    # message, so we will set them explicitly.
-    self.update_openbts_ipaddr(imsi, str(openbts_ipaddr))
-    self.update_openbts_port(imsi, str(openbts_port))
     return response
 
   def delete_subscriber(self, imsi):
