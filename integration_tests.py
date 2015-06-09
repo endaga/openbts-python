@@ -19,17 +19,17 @@ class VersionTest(unittest.TestCase):
   def test_query_openbts_version(self):
     connection = openbts.components.OpenBTS()
     response = connection.get_version()
-    self.assertTrue(isinstance(response.data, str))
+    self.assertTrue(isinstance(response.data, unicode))
 
   def test_query_sipauthserve_version(self):
     connection = openbts.components.SIPAuthServe()
     response = connection.get_version()
-    self.assertTrue(isinstance(response.data, str))
+    self.assertTrue(isinstance(response.data, unicode))
 
   def test_query_smqueue_version(self):
     connection = openbts.components.SMQueue()
     response = connection.get_version()
-    self.assertTrue(isinstance(response.data, str))
+    self.assertTrue(isinstance(response.data, unicode))
 
 
 class ConfigReadTest(unittest.TestCase):
