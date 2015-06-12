@@ -19,17 +19,17 @@ class VersionTest(unittest.TestCase):
   def test_query_openbts_version(self):
     connection = openbts.components.OpenBTS()
     response = connection.get_version()
-    self.assertTrue(str, isinstance(response.data))
+    self.assertTrue(isinstance(response.data, unicode))
 
   def test_query_sipauthserve_version(self):
     connection = openbts.components.SIPAuthServe()
     response = connection.get_version()
-    self.assertTrue(str, isinstance(response.data))
+    self.assertTrue(isinstance(response.data, unicode))
 
   def test_query_smqueue_version(self):
     connection = openbts.components.SMQueue()
     response = connection.get_version()
-    self.assertTrue(str, isinstance(response.data))
+    self.assertTrue(isinstance(response.data, unicode))
 
 
 class ConfigReadTest(unittest.TestCase):
@@ -37,15 +37,18 @@ class ConfigReadTest(unittest.TestCase):
 
   def test_read_openbts_config(self):
     connection = openbts.components.OpenBTS()
-    connection.read_config('Control.NumSQLTries')
+    response = connection.read_config('Control.NumSQLTries')
+    self.assertTrue(isinstance(response.data, dict))
 
   def test_read_sipauthserve_config(self):
     connection = openbts.components.SIPAuthServe()
-    connection.read_config('Log.Alarms.Max')
+    response = connection.read_config('Log.Alarms.Max')
+    self.assertTrue(isinstance(response.data, dict))
 
   def test_read_smqueue_config(self):
     connection = openbts.components.SMQueue()
-    connection.read_config('Bounce.Code')
+    response = connection.read_config('Bounce.Code')
+    self.assertTrue(isinstance(response.data, dict))
 
 
 class ConfigUpdateTest(unittest.TestCase):
@@ -191,9 +194,10 @@ class SIPAuthServeTest(unittest.TestCase):
                           self.conn.get_numbers(self.sub_a_imsi))
 
   def test_delete_subscribers(self):
+    first_count = self.conn.count_subscribers()
     self.conn.delete_subscriber(imsi=self.sub_a_imsi)
     self.conn.delete_subscriber(imsi=self.sub_b_imsi)
-    self.assertEqual(0, self.conn.count_subscribers())
+    self.assertEqual(first_count - 2, self.conn.count_subscribers())
 
   def test_get_imsi_from_number(self):
     result = self.conn.get_imsi_from_number('5551234')
@@ -289,6 +293,6 @@ class GPRSTest(unittest.TestCase):
     self.assertEqual(dict, type(response))
     ms_data = response[response.keys()[0]]
     self.assertEqual(dict, type(ms_data))
-    self.assertEqual(int, ms_data['uploaded_bytes'])
-    self.assertEqual(int, ms_data['downloaded_bytes'])
-    self.assertEqual(str, ms_data['ipaddr'])
+    self.assertEqual(int, type(ms_data['uploaded_bytes']))
+    self.assertEqual(int, type(ms_data['downloaded_bytes']))
+    self.assertEqual(str, type(ms_data['ipaddr']))

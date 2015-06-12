@@ -99,7 +99,6 @@ class SIPAuthServe(BaseComponent):
       subscribers = response.data
     except InvalidRequestError:
       return []
-
     # We get back every field in the SR, most of which are not useful.  We will
     # simplify each subscriber dict to show just a few attributes.  And we'll
     # attach additional info on associated numbers, account balance and the
@@ -275,10 +274,6 @@ class SIPAuthServe(BaseComponent):
     }
     response = self._send_and_receive(message)
     self.add_number(imsi, msisdn)
-    # In a recent upgrade, the IP and port are not being set correctly by this
-    # message, so we will set them explicitly.
-    self.update_openbts_ipaddr(imsi, str(openbts_ipaddr))
-    self.update_openbts_port(imsi, str(openbts_port))
     return response
 
   def delete_subscriber(self, imsi):
@@ -321,10 +316,10 @@ class SIPAuthServe(BaseComponent):
       'action': 'update',
       'match': {
         'name': imsi
-       },
+      },
       'fields': {
         'port': new_openbts_port,
-       }
+      }
     }
     return self._send_and_receive(message)
 
@@ -338,10 +333,10 @@ class SIPAuthServe(BaseComponent):
       'action': 'update',
       'match': {
         'name': imsi
-       },
+      },
       'fields': {
         'callerid': new_caller_id,
-       }
+      }
     }
     return self._send_and_receive(message)
 
