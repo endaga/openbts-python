@@ -3,11 +3,13 @@ openbts-python package definition
 """
 from setuptools import setup
 
-# load the readme
+
 with open('readme.md') as f:
   readme = f.read()
 
-version = '0.0.17'
+
+version = '0.0.18'
+
 
 setup(
     name='openbts',

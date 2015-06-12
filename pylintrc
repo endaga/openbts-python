@@ -1,15 +1,27 @@
+# The default pylint settings for this repo.
+# Note that the bracketed headings are required.
+#
+# See these sites for a large example pylintrc that disables certain warnings:
+# docutils.sourceforge.net/sandbox/py-rest-doc/utils/pylintrc
+# github.com/nijel/weblate/blob/master/pylint.rc
+
+
 [FORMAT]
-# the string used as indentation unit
+# No more than 79 chars as per PEP8.  The style guide says 80 but 79 works
+# better on github.
+max-line-length = 79
+# The string used as indentation unit.
 indent-string='  '
-# spaces of indent required inside a hanging or continued line
+# Spaces of indent required inside a hanging or continued line
 indent-after-paren=2
 
 
 [MESSAGES CONTROL]
-# http://pylint-messages.wikidot.com/all-messages
-# W0621: Redefining name %r from outer scope (line %s)
-# C0103: Invalid %s name "%s"
-# W0141: Used builtin function %r
-# C0330: Wrong hanging indentation
-# W0142: Used * or ** magic
-disable=W0621,C0103,W0141,C0330,W0142
+# Reference messages by id (in parens) or code:
+# http://pylint-messages.wikidot.com/all-codes
+disable = too-many-locals, too-few-public-methods, star-args
+
+
+[REPORTS]
+# Disable the reporting and just show messages.
+reports=no

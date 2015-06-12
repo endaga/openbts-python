@@ -189,7 +189,6 @@ class Response(object):
       self.data = data.get('data', None)
       self.dirty = data.get('dirty', None)
       return
-
     # If the request failed for some reason, raise an error.
     if data['code'] in list(ErrorCode):
       if data['code'] == ErrorCode.NotFound:
