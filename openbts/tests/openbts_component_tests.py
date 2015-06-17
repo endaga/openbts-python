@@ -154,6 +154,38 @@ class OpenBTSNominalGetVersionTestCase(unittest.TestCase):
     self.assertTrue(self.openbts_connection.socket.recv.called)
     self.assertEqual(response.data, 'release 4.0.0.8025')
 
+class OpenBTSNominalTMSIsTestCase(unittest.TestCase):
+  """Testing the 'tmsis' command on the components.OpenBTS class."""
+
+  def setUp(self):
+    self.openbts_connection = OpenBTS()
+    # mock a zmq socket with a simple recv return value
+    self.openbts_connection.socket = mock.Mock()
+    self.openbts_connection.socket.recv.return_value = json.dumps({
+      'code': 200,
+      'data': {
+        'ACCESSED' : '33m',
+        'IMSI' : '901550000000084',
+        'TMSI' : '0x4000003f',
+      }
+    })
+
+  def test_tmsis(self):
+    """The 'tmsis' command should return a response."""
+    response = self.openbts_connection.tmsis()
+    self.assertTrue(self.openbts_connection.socket.send.called)
+    expected_message = json.dumps({
+      'command': 'tmsis',
+      'action': '',
+      'key': '',
+      'value': ''
+    })
+    self.assertEqual(self.openbts_connection.socket.send.call_args[0],
+                     (expected_message,))
+    self.assertTrue(self.openbts_connection.socket.recv.called)
+    self.assertEqual(response.data['ACCESSED'], '33m')
+    self.assertEqual(response.data['IMSI'], '901550000000084')
+    self.assertEqual(response.data['TMSI'], '0x4000003f')
 
 class OpenBTSNominalMonitorTestCase(unittest.TestCase):
   """Testing the 'monitor' command on the components.OpenBTS class."""

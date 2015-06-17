@@ -41,6 +41,40 @@ class OpenBTS(BaseComponent):
     }
     return self._send_and_receive(message)
 
+  def tmsis(self):
+    """Gets all active subscribers from the TMSI table
+
+    Will return a list of objects of the form: {
+            'A5_SUPPORT' : '',
+            'ACCESSED' : '33m',
+            'ASSERTED_IDENTITY' : '',
+            'ASSOCIATED_URI' : '',
+            'AUTH' : '2',
+            'AUTH_EXPIRY' : '-',
+            'CREATED' : '33m',
+            'IMEI' : '356118040100460',
+            'IMSI' : '901550000000084',
+            'OLD_LAC' : '1000',
+            'OLD_MCC' : '901',
+            'OLD_MNC' : '55',
+            'OLD_TMSI' : '0',
+            'POWER_CLASS' : '',
+            'PTMSI_ASSIGNED' : '0',
+            'REJECT_CODE' : '0',
+            'RRLP_STATUS' : '0',
+            'TMSI' : '0x4000003f',
+            'TMSI_ASSIGNED' : '0',
+            'WELCOME_SENT' : '1'
+    }
+
+    """
+    message = {
+      'command': 'tmsis',
+      'action': '',
+      'key': '',
+      'value': ''
+    }
+    return self._send_and_receive(message)
 
 class SIPAuthServe(BaseComponent):
   """Manages communication to the SIPAuthServe service.
