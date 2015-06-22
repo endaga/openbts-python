@@ -3,6 +3,7 @@ manages components in the OpenBTS application suite
 """
 
 import re
+import time
 
 import envoy
 
@@ -41,40 +42,37 @@ class OpenBTS(BaseComponent):
     }
     return self._send_and_receive(message)
 
-  def tmsis(self):
-    """Gets all active subscribers from the TMSI table
+  def tmsis(self, fields=['IMSI', 'ACCESSED'], access_period=0, auth=2):
+    """Gets all active subscribers from the TMSI table.
 
-    Will return a list of objects of the form: {
-            'A5_SUPPORT' : '',
-            'ACCESSED' : '33m',
-            'ASSERTED_IDENTITY' : '',
-            'ASSOCIATED_URI' : '',
-            'AUTH' : '2',
-            'AUTH_EXPIRY' : '-',
-            'CREATED' : '33m',
-            'IMEI' : '356118040100460',
-            'IMSI' : '901550000000084',
-            'OLD_LAC' : '1000',
-            'OLD_MCC' : '901',
-            'OLD_MNC' : '55',
-            'OLD_TMSI' : '0',
-            'POWER_CLASS' : '',
-            'PTMSI_ASSIGNED' : '0',
-            'REJECT_CODE' : '0',
-            'RRLP_STATUS' : '0',
-            'TMSI' : '0x4000003f',
-            'TMSI_ASSIGNED' : '0',
-            'WELCOME_SENT' : '1'
+    Args: access_period: fetches all entries with ACCESS < acess_period
+                         (default=0 filter off)
+          auth: fetches all entries with AUTH = auth
+                         (default=2)
+
+    Returns: a list of objects defined by the list of fields.
+             See section 4.3 of OpenBTS 4.0 Manual for more fields.
+    """
+    qualifiers = {
+      'AUTH': str(auth)
     }
 
-    """
     message = {
       'command': 'tmsis',
-      'action': '',
-      'key': '',
-      'value': ''
+      'action': 'read',
+      'match': qualifiers,
+      'fields': fields,
     }
-    return self._send_and_receive(message)
+
+    result = self._send_and_receive(message)
+
+    if access_period > 0:
+      access_cutoff_time = time.time() - access_period
+      result.data = filter(
+              lambda entry: entry['ACCESSED'] > access_cutoff_time,
+              result.data)
+
+    return result.data
 
 class SIPAuthServe(BaseComponent):
   """Manages communication to the SIPAuthServe service.
