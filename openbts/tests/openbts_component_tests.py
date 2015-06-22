@@ -3,6 +3,7 @@ tests for the OpenBTS component
 """
 
 import json
+import time
 import unittest
 
 import mock
@@ -163,29 +164,33 @@ class OpenBTSNominalTMSIsTestCase(unittest.TestCase):
     self.openbts_connection.socket = mock.Mock()
     self.openbts_connection.socket.recv.return_value = json.dumps({
       'code': 200,
-      'data': {
-        'ACCESSED' : '33m',
-        'IMSI' : '901550000000084',
-        'TMSI' : '0x4000003f',
-      }
+      'data': [
+        {
+          'ACCESSED' : time.time() - 30,
+          'IMSI' : '901550000000084',
+        },
+        {
+          'ACCESSED' : time.time() - 180,
+          'IMSI' : '901550000000082',
+        }
+      ]
     })
 
   def test_tmsis(self):
     """The 'tmsis' command should return a response."""
-    response = self.openbts_connection.tmsis()
+    response = self.openbts_connection.tmsis(access_period=90)
     self.assertTrue(self.openbts_connection.socket.send.called)
     expected_message = json.dumps({
       'command': 'tmsis',
-      'action': '',
-      'key': '',
-      'value': ''
+      'action': 'read',
+      'match': {'AUTH': '2'},
+      'fields': ['IMSI', 'ACCESSED']
     })
     self.assertEqual(self.openbts_connection.socket.send.call_args[0],
                      (expected_message,))
     self.assertTrue(self.openbts_connection.socket.recv.called)
-    self.assertEqual(response.data['ACCESSED'], '33m')
-    self.assertEqual(response.data['IMSI'], '901550000000084')
-    self.assertEqual(response.data['TMSI'], '0x4000003f')
+    self.assertEqual(len(response), 1)
+    self.assertEqual(response[0]['IMSI'], '901550000000084')
 
 class OpenBTSNominalMonitorTestCase(unittest.TestCase):
   """Testing the 'monitor' command on the components.OpenBTS class."""
