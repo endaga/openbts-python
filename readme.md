@@ -58,6 +58,7 @@ MIT
 
 
 ### releases
+* 0.1.0  - minor release!
 * 0.0.18 - fixes integration tests
 * 0.0.17 - sets `RCVTIME0` on zmq sockets
 * 0.0.16 - adds `envoy` to `setup.py`
