@@ -166,12 +166,22 @@ class OpenBTSNominalTMSIsTestCase(unittest.TestCase):
       'code': 200,
       'data': [
         {
-          'ACCESSED' : time.time() - 30,
-          'IMSI' : '901550000000084',
+          'IMSI': '901550000000084',
+          'TMSI': '0x40000000',
+          'IMEI': '355534065410400',
+          'AUTH': '2',
+          'CREATED': time.time() - 300,
+          'ACCESSED': time.time() - 30,
+          'TMSI_ASSIGNED': '0'
         },
         {
-          'ACCESSED' : time.time() - 180,
-          'IMSI' : '901550000000082',
+          'IMSI': '901550000000082',
+          'TMSI': '0x40000000',
+          'IMEI': '355534065410401',
+          'AUTH': '2',
+          'CREATED': time.time() - 900,
+          'ACCESSED': time.time() - 180,
+          'TMSI_ASSIGNED': '0'
         }
       ]
     })
@@ -184,7 +194,8 @@ class OpenBTSNominalTMSIsTestCase(unittest.TestCase):
       'command': 'tmsis',
       'action': 'read',
       'match': {'AUTH': '2'},
-      'fields': ['IMSI', 'ACCESSED']
+      'fields': [ 'IMSI', 'TMSI', 'IMEI', 'AUTH', 'CREATED', 'ACCESSED',
+                  'TMSI_ASSIGNED']
     })
     self.assertEqual(self.openbts_connection.socket.send.call_args[0],
                      (expected_message,))

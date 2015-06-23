@@ -42,13 +42,16 @@ class OpenBTS(BaseComponent):
     }
     return self._send_and_receive(message)
 
-  def tmsis(self, fields=['IMSI', 'ACCESSED'], access_period=0, auth=2):
+  def tmsis(self, access_period=0, auth=2):
     """Gets all active subscribers from the TMSI table.
 
-    Args: access_period: fetches all entries with ACCESS < acess_period
+    Args: access_period: fetches all entries with ACCESS < access_period
                          (default=0 filter off)
           auth: fetches all entries with AUTH = auth
-                         (default=2)
+                         Unauthorized = 0
+                         Authorized by registrar = 1
+                         Open registration (default) = 2
+                         Failed open registration = 3
 
     Returns: a list of objects defined by the list of fields.
              See section 4.3 of OpenBTS 4.0 Manual for more fields.
@@ -61,18 +64,23 @@ class OpenBTS(BaseComponent):
       'command': 'tmsis',
       'action': 'read',
       'match': qualifiers,
-      'fields': fields,
+      'fields': [ 'IMSI', 'TMSI', 'IMEI', 'AUTH', 'CREATED', 'ACCESSED',
+                  'TMSI_ASSIGNED']
     }
 
-    result = self._send_and_receive(message)
+    try:
+        result = self._send_and_receive(message)
+        tmsis = result.data
+    except InvalidRequestError:
+      return []
 
     if access_period > 0:
-      access_cutoff_time = time.time() - access_period
-      result.data = filter(
-              lambda entry: entry['ACCESSED'] > access_cutoff_time,
-              result.data)
+        access_cutoff_time = time.time() - access_period
+        tmsis = filter(
+            lambda entry: entry['ACCESSED'] > access_cutoff_time,
+            tmsis)
 
-    return result.data
+    return tmsis
 
 class SIPAuthServe(BaseComponent):
   """Manages communication to the SIPAuthServe service.
