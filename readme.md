@@ -4,7 +4,7 @@ SMQueue, SIPAuthServe, and OpenBTS itself.
 
 
 ### requirements
-* OpenBTS 5.0 public alpha (tested on `aa72463`)
+* OpenBTS 5.0.2 public alpha (tested on `aa72463`)
 * Python 2.7
 
 
