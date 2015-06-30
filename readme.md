@@ -4,7 +4,7 @@ SMQueue, SIPAuthServe, and OpenBTS itself.
 
 
 ### requirements
-* OpenBTS 5.0 public alpha (tested on `11465a2`)
+* OpenBTS 5.0.2 public alpha (tested on `aa72463`)
 * Python 2.7
 
 
@@ -43,6 +43,11 @@ response = sipauthserve_connection.get_subscribers()
 print len(response.data)
 # 78
 
+# view tmsis entries
+response = openbts_connection.tmsis()
+print len(response)
+# 214
+
 # create a new subscriber by name, IMSI, MSIDSN and optional ki
 subscriber = ('ada', 0123, 4567, 8901)
 response = sipauthserve_connection.create_subscriber(*subscriber)
@@ -58,6 +63,7 @@ MIT
 
 
 ### releases
+* 0.1.1 - adds support for TMSIs
 * 0.1.0  - minor release!
 * 0.0.18 - fixes integration tests
 * 0.0.17 - sets `RCVTIME0` on zmq sockets

@@ -3,6 +3,7 @@ tests for the OpenBTS component
 """
 
 import json
+import time
 import unittest
 
 import mock
@@ -154,6 +155,53 @@ class OpenBTSNominalGetVersionTestCase(unittest.TestCase):
     self.assertTrue(self.openbts_connection.socket.recv.called)
     self.assertEqual(response.data, 'release 4.0.0.8025')
 
+class OpenBTSNominalTMSIsTestCase(unittest.TestCase):
+  """Testing the 'tmsis' command on the components.OpenBTS class."""
+
+  def setUp(self):
+    self.openbts_connection = OpenBTS()
+    # mock a zmq socket with a simple recv return value
+    self.openbts_connection.socket = mock.Mock()
+    self.openbts_connection.socket.recv.return_value = json.dumps({
+      'code': 200,
+      'data': [
+        {
+          'IMSI': '901550000000084',
+          'TMSI': '0x40000000',
+          'IMEI': '355534065410400',
+          'AUTH': '2',
+          'CREATED': time.time() - 300,
+          'ACCESSED': time.time() - 30,
+          'TMSI_ASSIGNED': '0'
+        },
+        {
+          'IMSI': '901550000000082',
+          'TMSI': '0x40000000',
+          'IMEI': '355534065410401',
+          'AUTH': '2',
+          'CREATED': time.time() - 900,
+          'ACCESSED': time.time() - 180,
+          'TMSI_ASSIGNED': '0'
+        }
+      ]
+    })
+
+  def test_tmsis(self):
+    """The 'tmsis' command should return a response."""
+    response = self.openbts_connection.tmsis(access_period=90)
+    self.assertTrue(self.openbts_connection.socket.send.called)
+    expected_message = json.dumps({
+      'command': 'tmsis',
+      'action': 'read',
+      'match': {'AUTH': '2'},
+      'fields': [ 'IMSI', 'TMSI', 'IMEI', 'AUTH', 'CREATED', 'ACCESSED',
+                  'TMSI_ASSIGNED']
+    })
+    self.assertEqual(self.openbts_connection.socket.send.call_args[0],
+                     (expected_message,))
+    self.assertTrue(self.openbts_connection.socket.recv.called)
+    self.assertEqual(len(response), 1)
+    self.assertEqual(response[0]['IMSI'], '901550000000084')
 
 class OpenBTSNominalMonitorTestCase(unittest.TestCase):
   """Testing the 'monitor' command on the components.OpenBTS class."""

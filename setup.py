@@ -8,8 +8,7 @@ with open('readme.md') as f:
   readme = f.read()
 
 
-version = '0.1.0'
-
+version = '0.1.1'
 
 setup(
     name='openbts',

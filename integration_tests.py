@@ -87,6 +87,17 @@ class OpenBTSMonitoringTest(unittest.TestCase):
     self.assertIn('noiseRSSI', response.data)
 
 
+class OpenBTSTMSITableTest(unittest.TestCase):
+  """Tests the TMSI table functionality"""
+
+  def test_tmsi_table(self):
+    """This test is pretty primitive since we can't add TMSI entries
+    from python yet."""
+    connection = openbts.components.OpenBTS()
+    response = connection.tmsis()
+    self.assertEqual(list, type(response))
+
+
 class SIPAuthServeTest(unittest.TestCase):
   """Testing SIPAuthServe subscriber and number operations."""
 
