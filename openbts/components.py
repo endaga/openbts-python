@@ -45,42 +45,64 @@ class OpenBTS(BaseComponent):
   def tmsis(self, access_period=0, auth=2):
     """Gets all active subscribers from the TMSI table.
 
-    Args: access_period: fetches all entries with ACCESS < access_period
+    Args:
+      access_period: fetches all entries with ACCESS < access_period
                          (default=0 filter off)
-          auth: fetches all entries with AUTH = auth
-                         Unauthorized = 0
-                         Authorized by registrar = 1
-                         Open registration (default) = 2
-                         Failed open registration = 3
+      auth: fetches all entries with AUTH = auth
+              Unauthorized = 0
+              Authorized by registrar = 1
+              Open registration (default) = 2
+              Failed open registration = 3
 
-    Returns: a list of objects defined by the list of fields.
-             See section 4.3 of OpenBTS 4.0 Manual for more fields.
+    Returns a list of objects defined by the list of fields.  See section 4.3
+    of the OpenBTS 4.0 Manual for more fields.
     """
     qualifiers = {
       'AUTH': str(auth)
     }
-
     message = {
       'command': 'tmsis',
       'action': 'read',
       'match': qualifiers,
-      'fields': [ 'IMSI', 'TMSI', 'IMEI', 'AUTH', 'CREATED', 'ACCESSED',
-                  'TMSI_ASSIGNED']
+      'fields': [
+        'IMSI', 'TMSI', 'IMEI', 'AUTH', 'CREATED', 'ACCESSED', 'TMSI_ASSIGNED'
+      ],
     }
-
     try:
         result = self._send_and_receive(message)
         tmsis = result.data
     except InvalidRequestError:
       return []
-
     if access_period > 0:
         access_cutoff_time = time.time() - access_period
         tmsis = filter(
-            lambda entry: entry['ACCESSED'] > access_cutoff_time,
-            tmsis)
-
+          lambda entry: entry['ACCESSED'] > access_cutoff_time, tmsis)
     return tmsis
+
+  def get_load(self):
+    """Get the current BTS load.
+
+    Returns a dict of the form: {
+      'sdcch_load': 0,
+      'sdcch_available': 4,
+      'tchf_load': 0,
+      'tchf_available': 3,
+      'pch_active': 0,
+      'pch_total': 0,
+      'agch_active': 0,
+      'agch_pending': 0,
+      'gprs_current_pdchs': 4,
+      'gprs_utilization_percentage': 4,
+    }
+
+    Terminology:
+      SDCCH: a channel for short transactions (e.g. call setup, SMS)
+      TCH/F: a full rate traffic channel
+      PCH: a paging channel for service notifications
+      AGCH: a channel for transmitting BTS responses to channel requests
+    """
+    pass
+
 
 class SIPAuthServe(BaseComponent):
   """Manages communication to the SIPAuthServe service.
