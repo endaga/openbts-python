@@ -63,9 +63,10 @@ MIT
 
 
 ### releases
+* 0.1.3 - adds `components.OpenBTS.get_load`
 * 0.1.2 - version increment required for internal endaga project
 * 0.1.1 - adds support for TMSIs
-* 0.1.0  - minor release!
+* 0.1.0 - minor release!
 * 0.0.18 - fixes integration tests
 * 0.0.17 - sets `RCVTIME0` on zmq sockets
 * 0.0.16 - adds `envoy` to `setup.py`
