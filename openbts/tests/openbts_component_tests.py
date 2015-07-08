@@ -8,9 +8,11 @@ import unittest
 
 import mock
 
+import openbts
 from openbts.components import OpenBTS
 from openbts.exceptions import InvalidRequestError
-from openbts.codes import (SuccessCode, ErrorCode)
+from openbts.codes import SuccessCode
+from openbts.tests import mocks
 
 
 class OpenBTSNominalConfigTestCase(unittest.TestCase):
@@ -257,7 +259,7 @@ class LoadTest(unittest.TestCase):
   def test_one(self):
     """We can get load data."""
     with open(self.cli_output_path) as output:
-        self.mock_envoy.return_text = output.read()
+      self.mock_envoy.return_text = output.read()
     expected = {
       'sdcch_load': 0,
       'sdcch_available': 4,
