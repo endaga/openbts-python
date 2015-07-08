@@ -69,14 +69,14 @@ class OpenBTS(BaseComponent):
       ],
     }
     try:
-        result = self._send_and_receive(message)
-        tmsis = result.data
+      result = self._send_and_receive(message)
+      tmsis = result.data
     except InvalidRequestError:
       return []
     if access_period > 0:
-        access_cutoff_time = time.time() - access_period
-        tmsis = filter(
-          lambda entry: entry['ACCESSED'] > access_cutoff_time, tmsis)
+      access_cutoff_time = time.time() - access_period
+      tmsis = filter(
+        lambda entry: entry['ACCESSED'] > access_cutoff_time, tmsis)
     return tmsis
 
   def get_load(self):
