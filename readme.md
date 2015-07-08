@@ -63,6 +63,7 @@ MIT
 
 
 ### releases
+* 0.1.2 - version increment required for internal endaga project
 * 0.1.1 - adds support for TMSIs
 * 0.1.0  - minor release!
 * 0.0.18 - fixes integration tests
