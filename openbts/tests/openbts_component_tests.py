@@ -8,9 +8,11 @@ import unittest
 
 import mock
 
+import openbts
 from openbts.components import OpenBTS
 from openbts.exceptions import InvalidRequestError
-from openbts.codes import (SuccessCode, ErrorCode)
+from openbts.codes import SuccessCode
+from openbts.tests import mocks
 
 
 class OpenBTSNominalConfigTestCase(unittest.TestCase):
@@ -155,6 +157,7 @@ class OpenBTSNominalGetVersionTestCase(unittest.TestCase):
     self.assertTrue(self.openbts_connection.socket.recv.called)
     self.assertEqual(response.data, 'release 4.0.0.8025')
 
+
 class OpenBTSNominalTMSIsTestCase(unittest.TestCase):
   """Testing the 'tmsis' command on the components.OpenBTS class."""
 
@@ -203,6 +206,7 @@ class OpenBTSNominalTMSIsTestCase(unittest.TestCase):
     self.assertEqual(len(response), 1)
     self.assertEqual(response[0]['IMSI'], '901550000000084')
 
+
 class OpenBTSNominalMonitorTestCase(unittest.TestCase):
   """Testing the 'monitor' command on the components.OpenBTS class."""
 
@@ -231,3 +235,41 @@ class OpenBTSNominalMonitorTestCase(unittest.TestCase):
                      (expected_message,))
     self.assertTrue(self.openbts_connection.socket.recv.called)
     self.assertEqual(response.data['noiseRSSI'], -68)
+
+
+class LoadTest(unittest.TestCase):
+  """Getting load data by invoking the OpenBTSCLI."""
+
+  @classmethod
+  def setUpClass(cls):
+    """We use envoy to call the OpenBTSCLI so we'll monkeypatch that module."""
+    cls.original_envoy = openbts.components.envoy
+    cls.mock_envoy = mocks.MockEnvoy(return_text=None)
+    openbts.components.envoy = cls.mock_envoy
+    cls.openbts = OpenBTS()
+    # Setup a path to the CLI output.
+    cls.cli_output_path = ('openbts/tests/fixtures/'
+                           'openbts_cli_load_output.txt')
+
+  @classmethod
+  def tearDownClass(cls):
+    """Repair the envoy monkeypatch."""
+    openbts.components.envoy = cls.original_envoy
+
+  def test_one(self):
+    """We can get load data."""
+    with open(self.cli_output_path) as output:
+      self.mock_envoy.return_text = output.read()
+    expected = {
+      'sdcch_load': 2,
+      'sdcch_available': 4,
+      'tchf_load': 1,
+      'tchf_available': 3,
+      'pch_active': 3,
+      'pch_total': 7,
+      'agch_active': 5,
+      'agch_pending': 9,
+      'gprs_current_pdchs': 4,
+      'gprs_utilization_percentage': 41,
+    }
+    self.assertEqual(expected, self.openbts.get_load())
