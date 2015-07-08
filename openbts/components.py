@@ -101,7 +101,20 @@ class OpenBTS(BaseComponent):
       PCH: a paging channel for service notifications
       AGCH: a channel for transmitting BTS responses to channel requests
     """
-    pass
+    response = envoy.run('/OpenBTS/OpenBTSCLI -c "load"')
+    items = response.std_out.split()
+    return {
+      'sdcch_load': int(items[5].split('/')[0]),
+      'sdcch_available': int(items[5].split('/')[1]),
+      'tchf_load': int(items[8].split('/')[0]),
+      'tchf_available': int(items[8].split('/')[1]),
+      'pch_active': int(items[13].strip(',')),
+      'pch_total': int(items[14]),
+      'agch_active': int(items[19].strip(',')),
+      'agch_pending': int(items[20]),
+      'gprs_current_pdchs': int(items[26]),
+      'gprs_utilization_percentage': int(items[28].strip('%')),
+    }
 
 
 class SIPAuthServe(BaseComponent):

@@ -261,15 +261,15 @@ class LoadTest(unittest.TestCase):
     with open(self.cli_output_path) as output:
       self.mock_envoy.return_text = output.read()
     expected = {
-      'sdcch_load': 0,
+      'sdcch_load': 2,
       'sdcch_available': 4,
-      'tchf_load': 0,
+      'tchf_load': 1,
       'tchf_available': 3,
-      'pch_active': 0,
-      'pch_total': 0,
-      'agch_active': 0,
-      'agch_pending': 0,
+      'pch_active': 3,
+      'pch_total': 7,
+      'agch_active': 5,
+      'agch_pending': 9,
       'gprs_current_pdchs': 4,
-      'gprs_utilization_percentage': 4,
+      'gprs_utilization_percentage': 41,
     }
     self.assertEqual(expected, self.openbts.get_load())
