@@ -98,6 +98,15 @@ class OpenBTSTMSITableTest(unittest.TestCase):
     self.assertEqual(list, type(response))
 
 
+class OpenBTSLoadTest(unittest.TestCase):
+  """Tests the get_load functionality"""
+
+  def test_get_load(self):
+    connection = openbts.components.OpenBTS()
+    response = connection.get_load()
+    self.assertEqual(dict, type(response))
+
+
 class SIPAuthServeTest(unittest.TestCase):
   """Testing SIPAuthServe subscriber and number operations."""
 
