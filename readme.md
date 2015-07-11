@@ -63,6 +63,7 @@ MIT
 
 
 ### releases
+* 0.1.4 - adds `components.OpenBTS.get_noise`
 * 0.1.3 - adds `components.OpenBTS.get_load`
 * 0.1.2 - version increment required for internal endaga project
 * 0.1.1 - adds support for TMSIs
