@@ -127,8 +127,8 @@ class OpenBTS(BaseComponent):
     response = envoy.run('/OpenBTS/OpenBTSCLI -c "noise"')
     items = response.std_out.split()
     return {
-      'noise_rssi_db': int(items[5].split('/')[0]),
-      'noise_ms_rssi_target_db': int(items[5].split('/')[1]),
+      'noise_rssi_db': int(items[3]),
+      'noise_ms_rssi_target_db': int(items[12]),
     }
 
 

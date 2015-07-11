@@ -302,4 +302,4 @@ class NoiseTest(unittest.TestCase):
       'noise_rssi_db': -72,
       'noise_ms_rssi_target_db': -55,
     }
-    self.assertEqual(expected, self.openbts.get_load())
+    self.assertEqual(expected, self.openbts.get_noise())
