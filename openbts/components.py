@@ -116,6 +116,21 @@ class OpenBTS(BaseComponent):
       'gprs_utilization_percentage': int(items[28].strip('%')),
     }
 
+  def get_noise(self):
+    """Get the current BTS noise values from the CLI.
+
+    Returns a dict of the form: {
+      'noise_rssi_db': -73,
+      'noise_ms_rssi_target_db': -50,
+    }
+    """
+    response = envoy.run('/OpenBTS/OpenBTSCLI -c "noise"')
+    items = response.std_out.split()
+    return {
+      'noise_rssi_db': int(items[3]),
+      'noise_ms_rssi_target_db': int(items[12]),
+    }
+
 
 class SIPAuthServe(BaseComponent):
   """Manages communication to the SIPAuthServe service.

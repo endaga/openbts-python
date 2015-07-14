@@ -273,3 +273,33 @@ class LoadTest(unittest.TestCase):
       'gprs_utilization_percentage': 41,
     }
     self.assertEqual(expected, self.openbts.get_load())
+
+
+class NoiseTest(unittest.TestCase):
+  """Getting noise data by invoking the OpenBTSCLI."""
+
+  @classmethod
+  def setUpClass(cls):
+    """We use envoy to call the OpenBTSCLI so we'll monkeypatch that module."""
+    cls.original_envoy = openbts.components.envoy
+    cls.mock_envoy = mocks.MockEnvoy(return_text=None)
+    openbts.components.envoy = cls.mock_envoy
+    cls.openbts = OpenBTS()
+    # Setup a path to the CLI output.
+    cls.cli_output_path = ('openbts/tests/fixtures/'
+                           'openbts_cli_noise_output.txt')
+
+  @classmethod
+  def tearDownClass(cls):
+    """Repair the envoy monkeypatch."""
+    openbts.components.envoy = cls.original_envoy
+
+  def test_one(self):
+    """We can get noise data."""
+    with open(self.cli_output_path) as output:
+      self.mock_envoy.return_text = output.read()
+    expected = {
+      'noise_rssi_db': -72,
+      'noise_ms_rssi_target_db': -55,
+    }
+    self.assertEqual(expected, self.openbts.get_noise())
