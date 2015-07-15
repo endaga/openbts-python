@@ -4,7 +4,10 @@ SMQueue, SIPAuthServe, and OpenBTS itself.
 
 
 ### requirements
-* OpenBTS 5.0.2 public alpha (tested on `aa72463`)
+* Endaga's OpenBTS fork (tested on `3edca32`)
+* Endaga's SMQueue fork (tested on `bc292b2`)
+* Endaga's SIPAuthServe fork (tested on `3affcd7`)
+* Endaga's NodeManager fork (tested on `fae5611`)
 * Python 2.7
 
 
