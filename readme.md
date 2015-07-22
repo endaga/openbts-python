@@ -66,6 +66,7 @@ MIT
 
 
 ### releases
+* 0.1.6 - new release for an internal endaga project
 * 0.1.5 - adds `components.OpenBTS.get_noise`
 * 0.1.4 - new release for an internal endaga project
 * 0.1.3 - adds `components.OpenBTS.get_load`
