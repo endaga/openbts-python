@@ -113,7 +113,9 @@ class OpenBTS(BaseComponent):
       'agch_active': int(items[19].strip(',')),
       'agch_pending': int(items[20]),
       'gprs_current_pdchs': int(items[26]),
-      'gprs_utilization_percentage': int(items[28].strip('%')),
+      # We convert to a float first so that this can handle numbers in
+      # scientific notation.
+      'gprs_utilization_percentage': int(float(items[28].strip('%'))),
     }
 
   def get_noise(self):
