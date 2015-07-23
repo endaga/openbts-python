@@ -274,6 +274,26 @@ class LoadTest(unittest.TestCase):
     }
     self.assertEqual(expected, self.openbts.get_load())
 
+  def test_low_gprs_utilization(self):
+    """We can handle gprs utilization in scientific notation."""
+    cli_output_path = ('openbts/tests/fixtures/'
+                            'openbts_cli_load_low_gprs_output.txt')
+    with open(cli_output_path) as output:
+      self.mock_envoy.return_text = output.read()
+    expected = {
+      'sdcch_load': 2,
+      'sdcch_available': 4,
+      'tchf_load': 1,
+      'tchf_available': 3,
+      'pch_active': 3,
+      'pch_total': 7,
+      'agch_active': 5,
+      'agch_pending': 9,
+      'gprs_current_pdchs': 4,
+      'gprs_utilization_percentage': 0,
+    }
+    self.assertEqual(expected, self.openbts.get_load())
+
 
 class NoiseTest(unittest.TestCase):
   """Getting noise data by invoking the OpenBTSCLI."""
