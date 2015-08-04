@@ -102,6 +102,7 @@ class OpenBTS(BaseComponent):
       AGCH: a channel for transmitting BTS responses to channel requests
     """
     response = envoy.run('/OpenBTS/OpenBTSCLI -c "load"')
+    # pylint: disable=no-member
     if response.status_code != 0:
         raise OpenBTSError('CLI returned with non-zero status: %d' %
                 response.status_code)
@@ -130,6 +131,7 @@ class OpenBTS(BaseComponent):
     }
     """
     response = envoy.run('/OpenBTS/OpenBTSCLI -c "noise"')
+    # pylint: disable=no-member
     if response.status_code != 0:
         raise OpenBTSError('CLI returned with non-zero status: %d' %
                 response.status_code)
@@ -518,6 +520,7 @@ class SIPAuthServe(BaseComponent):
       target_imsi: the subsciber-of-interest
     """
     response = envoy.run('/OpenBTS/OpenBTSCLI -c "gprs list"')
+    # pylint: disable=no-member
     if response.status_code != 0:
         raise OpenBTSError('CLI returned with non-zero status: %d' %
                 response.status_code)
