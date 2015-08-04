@@ -66,6 +66,7 @@ MIT
 
 
 ### releases
+* 0.1.8 - Fixes ZMQError socket is put in bad state because OpenBTS is down. Improves error reporting on CLI
 * 0.1.7 - `get_load` handles gprs utilization percentages expressed in scientific notation
 * 0.1.6 - new release for an internal endaga project
 * 0.1.5 - adds `components.OpenBTS.get_noise`

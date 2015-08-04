@@ -9,6 +9,7 @@ class MockEnvoy(object):
 
     def __init__(self, return_text):
       self.std_out = return_text
+      self.status_code = 0
 
   def run(self, _):
     return self.Response(self.return_text)
