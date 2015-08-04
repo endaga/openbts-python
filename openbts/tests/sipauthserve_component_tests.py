@@ -316,8 +316,7 @@ class GPRSTest(unittest.TestCase):
     openbts.components.envoy = cls.mock_envoy
     cls.sipauthserve = SIPAuthServe()
     # Setup a path to the CLI output.
-    cls.cli_output_path = ('openbts/tests/fixtures/'
-                           'openbts_cli_gprs_list_output.txt')
+    cls.cli_output_path = ('openbts/tests/fixtures/gprs_list.txt')
 
   @classmethod
   def tearDownClass(cls):
