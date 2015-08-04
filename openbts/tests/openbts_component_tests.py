@@ -248,8 +248,7 @@ class LoadTest(unittest.TestCase):
     openbts.components.envoy = cls.mock_envoy
     cls.openbts = OpenBTS()
     # Setup a path to the CLI output.
-    cls.cli_output_path = ('openbts/tests/fixtures/'
-                           'openbts_cli_load_output.txt')
+    cls.cli_output_path = ('openbts/tests/fixtures/load.txt')
 
   @classmethod
   def tearDownClass(cls):
@@ -276,8 +275,7 @@ class LoadTest(unittest.TestCase):
 
   def test_low_gprs_utilization(self):
     """We can handle gprs utilization in scientific notation."""
-    cli_output_path = ('openbts/tests/fixtures/'
-                            'openbts_cli_load_low_gprs_output.txt')
+    cli_output_path = ('openbts/tests/fixtures/load_low_gprs.txt')
     with open(cli_output_path) as output:
       self.mock_envoy.return_text = output.read()
     expected = {
@@ -306,8 +304,7 @@ class NoiseTest(unittest.TestCase):
     openbts.components.envoy = cls.mock_envoy
     cls.openbts = OpenBTS()
     # Setup a path to the CLI output.
-    cls.cli_output_path = ('openbts/tests/fixtures/'
-                           'openbts_cli_noise_output.txt')
+    cls.cli_output_path = ('openbts/tests/fixtures/noise.txt')
 
   @classmethod
   def tearDownClass(cls):
