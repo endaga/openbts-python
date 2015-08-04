@@ -151,14 +151,13 @@ class BaseComponent(object):
         raw_response_data = self.socket.recv()
         return Response(raw_response_data)
       except zmq.Again:
-        # Reset the socket or it will be left in a bad state, waiting for a
-        # response.
-        self.socket.close()
-        self.setup_socket()
-        self.socket.connect(self.address)
-        raise TimeoutError('recv did not receive a response')
-    else:
-      raise TimeoutError('polling did not receive a response')
+          pass
+    # Reset the socket or it will be left in a bad state, waiting for a
+    # response.
+    self.socket.close()
+    self.setup_socket()
+    self.socket.connect(self.address)
+    raise TimeoutError('did not receive a response')
 
 
 class Response(object):
