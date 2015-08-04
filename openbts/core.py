@@ -151,9 +151,9 @@ class BaseComponent(object):
         raw_response_data = self.socket.recv()
         return Response(raw_response_data)
       except zmq.Again:
-          pass
-    # Reset the socket or it will be left in a bad state, waiting for a
-    # response.
+        pass
+    # If polling fails or recv failes, we reset the socket or
+    # it will be left in a bad state, waiting for a response.
     self.socket.close()
     self.setup_socket()
     self.socket.connect(self.address)
