@@ -103,8 +103,8 @@ class OpenBTS(BaseComponent):
     """
     response = envoy.run('/OpenBTS/OpenBTSCLI -c "load"')
     if response.status_code != 0:
-      raise InvalidRequestError('CLI returned with non-zero status: %d' %
-                response.status_code)
+      raise InvalidRequestError(
+        'CLI returned with non-zero status: %d' % response.status_code)
     items = response.std_out.split()
     return {
       'sdcch_load': int(items[5].split('/')[0]),
@@ -131,8 +131,8 @@ class OpenBTS(BaseComponent):
     """
     response = envoy.run('/OpenBTS/OpenBTSCLI -c "noise"')
     if response.status_code != 0:
-      raise InvalidRequestError('CLI returned with non-zero status: %d' %
-                response.status_code)
+      raise InvalidRequestError(
+        'CLI returned with non-zero status: %d' % response.status_code)
     items = response.std_out.split()
     return {
       'noise_rssi_db': int(items[3]),
@@ -519,8 +519,8 @@ class SIPAuthServe(BaseComponent):
     """
     response = envoy.run('/OpenBTS/OpenBTSCLI -c "gprs list"')
     if response.status_code != 0:
-      raise InvalidRequestError('CLI returned with non-zero status: %d' %
-                response.status_code)
+      raise InvalidRequestError(
+        'CLI returned with non-zero status: %d' % response.status_code)
     result = {}
     for ms_block in response.std_out.split('MS#'):
       try:
