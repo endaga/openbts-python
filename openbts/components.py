@@ -8,7 +8,7 @@ import time
 import envoy
 
 from openbts.core import BaseComponent
-from openbts.exceptions import OpenBTSError, InvalidRequestError
+from openbts.exceptions import InvalidRequestError
 
 
 class OpenBTS(BaseComponent):
@@ -102,9 +102,8 @@ class OpenBTS(BaseComponent):
       AGCH: a channel for transmitting BTS responses to channel requests
     """
     response = envoy.run('/OpenBTS/OpenBTSCLI -c "load"')
-    # pylint: disable=no-member
     if response.status_code != 0:
-        raise OpenBTSError('CLI returned with non-zero status: %d' %
+        raise InvalidRequestError('CLI returned with non-zero status: %d' %
                 response.status_code)
     items = response.std_out.split()
     return {
@@ -131,9 +130,8 @@ class OpenBTS(BaseComponent):
     }
     """
     response = envoy.run('/OpenBTS/OpenBTSCLI -c "noise"')
-    # pylint: disable=no-member
     if response.status_code != 0:
-        raise OpenBTSError('CLI returned with non-zero status: %d' %
+        raise InvalidRequestError('CLI returned with non-zero status: %d' %
                 response.status_code)
     items = response.std_out.split()
     return {
@@ -520,9 +518,8 @@ class SIPAuthServe(BaseComponent):
       target_imsi: the subsciber-of-interest
     """
     response = envoy.run('/OpenBTS/OpenBTSCLI -c "gprs list"')
-    # pylint: disable=no-member
     if response.status_code != 0:
-        raise OpenBTSError('CLI returned with non-zero status: %d' %
+        raise InvalidRequestError('CLI returned with non-zero status: %d' %
                 response.status_code)
     result = {}
     for ms_block in response.std_out.split('MS#'):
