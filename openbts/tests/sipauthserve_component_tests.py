@@ -55,7 +55,7 @@ class SIPAuthServeNominalConfigTestCase(unittest.TestCase):
   def test_update_config(self):
     """Updating a key should send a message over zmq and get a response."""
     response = self.sipauthserve_connection.update_config(
-        'sample-key', 'sample-value')
+      'sample-key', 'sample-value')
     self.assertTrue(self.sipauthserve_connection.socket.send.called)
     expected_message = json.dumps({
       'command': 'config',
@@ -166,12 +166,12 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
           'name': 'subscriber_a',
           'exten': '5551234',
           'ipaddr': '127.0.0.1',
-           'port': '5555'
+          'port': '5555'
         }, {
           'name': 'subscriber_b',
           'exten': '5559876',
           'ipaddr': '127.0.0.1',
-           'port': '5555'
+          'port': '5555'
         }]
       }),
       json.dumps({'code': 200, 'data': [{'exten': '5551234'}]}),
@@ -198,7 +198,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
           'name': 'subscriber_a',
           'exten': '5551234',
           'ipaddr': '127.0.0.1',
-           'port': '5555'
+          'port': '5555'
         }]
       }),
       json.dumps({'code': 200, 'data': [{'exten': '5551234'}]}),
@@ -228,7 +228,7 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
       json.dumps({'code': 200}),
     ]
     self.sipauthserve_connection.create_subscriber(
-        310150123456789, 123456789, '127.0.0.1', '1234', ki='abc')
+      310150123456789, 123456789, '127.0.0.1', '1234', ki='abc')
 
   def test_create_subscriber_sans_ki(self):
     """Creating a subscriber without a specficied ki uses zmq."""
@@ -245,8 +245,8 @@ class SIPAuthServeNominalSubscriberTestCase(unittest.TestCase):
       json.dumps({'code': 200}),
       json.dumps({'code': 200}),
     ]
-    response = self.sipauthserve_connection.create_subscriber(
-        310150123456789, 123456789, '127.0.0.1', '1234')
+    self.sipauthserve_connection.create_subscriber(
+      310150123456789, 123456789, '127.0.0.1', '1234')
 
   def test_delete_subscriber_by_imsi(self):
     """Deleting a subscriber by IMSI should use zmq."""
@@ -289,7 +289,7 @@ class SIPAuthServeOffNominalSubscriberTestCase(unittest.TestCase):
       'data': 'not found'
     })
     response = self.sipauthserve_connection.get_subscribers(
-        imsi='non-existent')
+      imsi='non-existent')
     self.assertEqual([], response)
 
   def test_delete_subscriber_when_sqlite_unavailable(self):
@@ -297,12 +297,12 @@ class SIPAuthServeOffNominalSubscriberTestCase(unittest.TestCase):
     self.sipauthserve_connection.socket.recv.return_value = json.dumps({
       'code': 503,
       'data': {
-          'sip_buddies': 'something bad',
-          'dialdata_table': 'this could be ok'
-        }
-      })
+        'sip_buddies': 'something bad',
+        'dialdata_table': 'this could be ok'
+      }
+    })
     with self.assertRaises(InvalidRequestError):
-        self.sipauthserve_connection.delete_subscriber(310150123456789)
+      self.sipauthserve_connection.delete_subscriber(310150123456789)
 
 
 class GPRSTest(unittest.TestCase):
@@ -316,8 +316,7 @@ class GPRSTest(unittest.TestCase):
     openbts.components.envoy = cls.mock_envoy
     cls.sipauthserve = SIPAuthServe()
     # Setup a path to the CLI output.
-    cls.cli_output_path = ('openbts/tests/fixtures/'
-                           'openbts_cli_gprs_list_output.txt')
+    cls.cli_output_path = ('openbts/tests/fixtures/gprs_list.txt')
 
   @classmethod
   def tearDownClass(cls):
@@ -339,35 +338,35 @@ class GPRSTest(unittest.TestCase):
     """We can get all available GPRS connection data."""
     # The command 'gprs list' returns a big string when IPs are assigned.
     with open(self.cli_output_path) as output:
-        self.mock_envoy.return_text = output.read()
+      self.mock_envoy.return_text = output.read()
     expected_usage = {
-        'IMSI901550000000022': {
-            'ipaddr': '192.168.99.4',
-            'uploaded_bytes': 53495,
-            'downloaded_bytes': 139441,
-        },
-        'IMSI901550000000505': {
-            'ipaddr': '192.168.99.1',
-            'uploaded_bytes': 21254,
-            'downloaded_bytes': 41016,
-        },
-        'IMSI901550000000504': {
-            'ipaddr': '192.168.99.2',
-            'uploaded_bytes': 111,
-            'downloaded_bytes': 77,
-        },
-        'IMSI901550000000015': {
-            'ipaddr': '192.168.99.3',
-            'uploaded_bytes': 111,
-            'downloaded_bytes': 77,
-        },
+      'IMSI901550000000022': {
+        'ipaddr': '192.168.99.4',
+        'uploaded_bytes': 53495,
+        'downloaded_bytes': 139441,
+      },
+      'IMSI901550000000505': {
+        'ipaddr': '192.168.99.1',
+        'uploaded_bytes': 21254,
+        'downloaded_bytes': 41016,
+      },
+      'IMSI901550000000504': {
+        'ipaddr': '192.168.99.2',
+        'uploaded_bytes': 111,
+        'downloaded_bytes': 77,
+      },
+      'IMSI901550000000015': {
+        'ipaddr': '192.168.99.3',
+        'uploaded_bytes': 111,
+        'downloaded_bytes': 77,
+      },
     }
     self.assertEqual(expected_usage, self.sipauthserve.get_gprs_usage())
 
   def test_specific_imsi(self):
     """We can get data for a specific IMSI."""
     with open(self.cli_output_path) as output:
-        self.mock_envoy.return_text = output.read()
+      self.mock_envoy.return_text = output.read()
     target_imsi = 'IMSI901550000000022'
     expected_usage = {
       'ipaddr': '192.168.99.4',
@@ -380,8 +379,38 @@ class GPRSTest(unittest.TestCase):
   def test_unknown_imsi(self):
     """Unknown IMSIs will return None."""
     with open(self.cli_output_path) as output:
-        self.mock_envoy.return_text = output.read()
+      self.mock_envoy.return_text = output.read()
     target_imsi = 'IMSI000123'
     expected_usage = None
     self.assertEqual(expected_usage,
                      self.sipauthserve.get_gprs_usage(target_imsi=target_imsi))
+
+  def test_duplicate_imsis(self):
+    """We correctly handle duplicate IMSIs in the output of gprs list."""
+    path = 'openbts/tests/fixtures/gprs_list_duplicate_imsis.txt'
+    with open(path) as output:
+      self.mock_envoy.return_text = output.read()
+    expected_usage = {
+      'IMSI901550000000544': {
+        'ipaddr': '192.168.99.1',
+        'uploaded_bytes': 45986,
+        'downloaded_bytes': 76210,
+      },
+      'IMSI901550000000186': {
+        'ipaddr': '192.168.99.2',
+        'uploaded_bytes': 90625,
+        'downloaded_bytes': 146420,
+      },
+      'IMSI901550000000545': {
+        'ipaddr': '192.168.99.3',
+        'uploaded_bytes': 93076,
+        'downloaded_bytes': 147420,
+      },
+      'IMSI901550000000542': {
+        'ipaddr': '192.168.99.4',
+        'uploaded_bytes': 72894,
+        'downloaded_bytes': 139771,
+      },
+    }
+    print self.sipauthserve.get_gprs_usage()
+    self.assertEqual(expected_usage, self.sipauthserve.get_gprs_usage())
