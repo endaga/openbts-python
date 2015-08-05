@@ -384,3 +384,33 @@ class GPRSTest(unittest.TestCase):
     expected_usage = None
     self.assertEqual(expected_usage,
                      self.sipauthserve.get_gprs_usage(target_imsi=target_imsi))
+
+  def test_duplicate_imsis(self):
+    """We correctly handle duplicate IMSIs in the output of gprs list."""
+    path = 'openbts/tests/fixtures/gprs_list_duplicate_imsis.txt'
+    with open(path) as output:
+      self.mock_envoy.return_text = output.read()
+    expected_usage = {
+      'IMSI901550000000544': {
+        'ipaddr': '192.168.99.1',
+        'uploaded_bytes': 45986,
+        'downloaded_bytes': 76210,
+      },
+      'IMSI901550000000186': {
+        'ipaddr': '192.168.99.2',
+        'uploaded_bytes': 90625,
+        'downloaded_bytes': 146420,
+      },
+      'IMSI901550000000545': {
+        'ipaddr': '192.168.99.3',
+        'uploaded_bytes': 93076,
+        'downloaded_bytes': 147420,
+      },
+      'IMSI901550000000542': {
+        'ipaddr': '192.168.99.4',
+        'uploaded_bytes': 72831,
+        'downloaded_bytes': 139747,
+      },
+    }
+    print self.sipauthserve.get_gprs_usage()
+    self.assertEqual(expected_usage, self.sipauthserve.get_gprs_usage())
