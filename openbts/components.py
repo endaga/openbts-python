@@ -542,13 +542,11 @@ class SIPAuthServe(BaseComponent):
         # Casting to int failed.
         continue
       # See if we already have an entry for the same IMSI -- we sometimes see
-      # duplicates.  If we do have an entry already, take the greater value of
-      # uploaded and downloaded bytes.
+      # duplicates.  If we do have an entry already, sum the byte counts across
+      # entries.
       if imsi in result:
-        if result[imsi]['uploaded_bytes'] > uploaded_bytes:
-          uploaded_bytes = result[imsi]['uploaded_bytes']
-        if result[imsi]['downloaded_bytes'] > downloaded_bytes:
-          downloaded_bytes = result[imsi]['downloaded_bytes']
+        uploaded_bytes += result[imsi]['uploaded_bytes']
+        downloaded_bytes += result[imsi]['downloaded_bytes']
       result[imsi] = {
         'ipaddr': ipaddr,
         'uploaded_bytes': uploaded_bytes,

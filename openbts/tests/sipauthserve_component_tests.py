@@ -408,8 +408,8 @@ class GPRSTest(unittest.TestCase):
       },
       'IMSI901550000000542': {
         'ipaddr': '192.168.99.4',
-        'uploaded_bytes': 72831,
-        'downloaded_bytes': 139747,
+        'uploaded_bytes': 72894,
+        'downloaded_bytes': 139771,
       },
     }
     print self.sipauthserve.get_gprs_usage()
