@@ -12,6 +12,7 @@ class SuccessCode(OpenBTSCode):
     """
     OK = 200
     NoContent = 204
+    NotModified = 304
 
 class ErrorCode(OpenBTSCode):
     """Codes that are associated with a failed Nodemanager request.
